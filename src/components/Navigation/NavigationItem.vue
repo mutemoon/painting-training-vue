@@ -25,4 +25,16 @@ a {
 .router-link-active {
   color: rgb(200, 23, 216);
 }
+
+@media only screen and (min-width: 375px){
+  .navigation-item {
+    display: inline-block;
+  }
+}
+
+@media only screen and (min-width: 750px){
+  .navigation-item {
+    display: block;
+  }
+}
 </style>

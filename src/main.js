@@ -2,6 +2,7 @@ import Vue from 'vue'
 import router from './router'
 import store from './store'
 import App from './App.vue'
+import vuetify from './plugins/vuetify'
 require('./assets/css/base.css')
 
 String.prototype.toNumber = function () {return /^-?\d+\.?\d*$/.test(this) ? parseFloat(this) : 0}
@@ -17,5 +18,6 @@ Vue.config.productionTip = false
 window.vm = new Vue({
   render: h => h(App),
   router,
-  store,
+  vuetify,
+  store
 }).$mount('#app')

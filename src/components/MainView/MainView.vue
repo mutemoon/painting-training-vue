@@ -12,7 +12,7 @@ export default {
 
 <style scoped>
 .view {
-  position: fixed;
+  position: relative;
   top: 0;
   left: 10%;
   box-sizing: border-box;

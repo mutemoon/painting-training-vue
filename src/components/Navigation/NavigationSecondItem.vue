@@ -1,15 +1,15 @@
 <template>
   <div class="navigation-second-item">
     <slot>
-      <router-link :to="to">{{title}}</router-link>
+      <router-link :to="to">{{ title }}</router-link>
     </slot>
   </div>
 </template>
 
 <script>
 export default {
-  props: ["to", "title"]
-}
+  props: ["to", "title"],
+};
 </script>
 
 <style scoped>
@@ -23,5 +23,17 @@ a {
 }
 .router-link-active {
   color: rgb(200, 23, 216);
+}
+
+@media only screen and (min-width: 375px) {
+  .navigation-second-item {
+    display: inline-block;
+  }
+}
+
+@media only screen and (min-width: 750px) {
+  .navigation-second-item {
+    display: block;
+  }
 }
 </style>

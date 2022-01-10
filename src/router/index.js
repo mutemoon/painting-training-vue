@@ -9,6 +9,7 @@ const User = () => import('../components/User')
 const Unknow = () => import('../components/Unknow')
 const Vocabulary = () => import('../components/vocabulary/Vocabulary')
 const DoubleLinesParallel = () => import('../views/painting-training/perspective/DoubleLinesParallel')
+const Grammar = () => import('../views/review/Grammar')
 
 Vue.use(VueRouter)
 
@@ -39,6 +40,23 @@ const routes = [{
       path: 'calcdamage',
       component: CalcDamage,
     }]
+  },
+  {
+    path: '/review',
+    component: Grammar,
+    meta: {
+      title: '复习'
+    },
+    children: [{
+      path: '',
+      redirect: 'grammar',
+      meta: {
+        title: "语法复习"
+      }
+    }, {
+      path: 'grammar',
+      component: Grammar,
+    }, ]
   },
   {
     path: '/user/:uid',
