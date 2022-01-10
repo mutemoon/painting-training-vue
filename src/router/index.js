@@ -8,7 +8,8 @@ const CalcDamage = () => import('../views/calculator/CalcDamage')
 const User = () => import('../components/User')
 const Unknow = () => import('../components/Unknow')
 const Vocabulary = () => import('../components/vocabulary/Vocabulary')
-const DoubleLinesParallel = () => import('../views/painting-training/perspective/DoubleLinesParallel')
+const LineLineParallel = () => import('../views/painting-training/perspective/LineLineParallel')
+const PaintingTraining = () => import('../views/painting-training/PaintingTraining')
 const Grammar = () => import('../views/review/Grammar')
 
 Vue.use(VueRouter)
@@ -72,23 +73,22 @@ const routes = [{
       title: '记单词'
     }
   },
-
   {
     path: '/painting-training',
-    redirect: '/painting-training/perspective/double-lines-parallel'
-  },
-  {
-    path: '/painting-training/perspective',
-    redirect: '/painting-training/perspective/double-lines-parallel'
-  },
-  {
-    path: '/painting-training/perspective/double-lines-parallel',
-    component: DoubleLinesParallel,
+    component: PaintingTraining,
     meta: {
-      title: '两线平行'
-    }
+      title: '美基训练'
+    },
+    children: [{
+        path: '',
+        redirect: 'line-line-parallel'
+      },
+      {
+        path: 'line-line-parallel',
+        component: LineLineParallel
+      },
+    ]
   },
-
   {
     path: '*',
     component: Unknow,

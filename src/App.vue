@@ -58,7 +58,7 @@ export default {
       { title: "主页", icon: "H", to: "/home" },
       { title: "我的账户", icon: "A", to: "/'/user/'+user.uid" },
       { title: "复习", icon: "R", to: "/review/grammar" },
-      // { title: "语法复习", icon: "G", to: "/review/grammar"},
+      { title: "美基训练", icon: "T", to: "/painting-training"},
     ],
     drawer: false,
     group: null,

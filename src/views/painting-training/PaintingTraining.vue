@@ -53,7 +53,9 @@ export default {
   },
   created() {
     // 初始化scene
+    console.log(store.getters.scene)
     if (!store.getters.scene) {
+      console.log(111111111)
       this.setScene(new THREE.Scene());
     }
     // 初始化canvas
