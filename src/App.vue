@@ -5,14 +5,12 @@
         <v-list-item-group multiple>
           <v-list-item
             v-for="nav in navs"
-            color="purple"
+            color="primary"
             :key="nav.title"
             :to="nav.to"
-            two-line
-            light
           >
             <v-list-item-icon>
-              <v-icon color="purple">{{ nav.icon }}</v-icon>
+              <v-icon color="primary">{{ nav.icon }}</v-icon>
             </v-list-item-icon>
 
             <v-list-item-content>
@@ -36,10 +34,10 @@
     <!-- 根据应用组件来调整你的内容 -->
     <v-main>
       <!-- 给应用提供合适的间距 -->
-      <v-container fluid>
-        <v-card class="px-6 pt-10 pb-14" elevation="4"
-          ><router-view></router-view
-        ></v-card>
+      <v-container fluid style="height:100%;">
+        <!-- <v-card class="px-6 pt-10 pb-14" elevation="4" > -->
+          <router-view></router-view>
+        <!-- </v-card> -->
       </v-container>
     </v-main>
 
@@ -55,9 +53,9 @@ export default {
 
   data: () => ({
     navs: [
-      { title: "主页", icon: "H", to: "/home" },
-      { title: "我的账户", icon: "A", to: "/'/user/'+user.uid" },
-      { title: "复习", icon: "R", to: "/review/grammar" },
+      { title: "主页", icon: "mdi-home", to: "/home" },
+      { title: "我的账户", icon: "mdi-account-circle", to: "/'/user/'+user.uid" },
+      { title: "复习", icon: "mdi-circle-edit-outline", to: "/review/grammar" },
       { title: "美基训练", icon: "T", to: "/painting-training"},
     ],
     drawer: false,

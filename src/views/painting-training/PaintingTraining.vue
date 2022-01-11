@@ -1,35 +1,43 @@
 <template>
-  <div class="main">
-    <navigation>
-      <navigation-item to="/home" title="主页"></navigation-item>
-      <navigation-item to="/calculator" title="一些计算器"></navigation-item>
-      <navigation-item to="/vocabulary" title="记单词"></navigation-item>
-      <navigation-item
-        to="/'/user/'+user.uid"
-        title="我的账户"
-      ></navigation-item>
-      <navigation-item
-        to="/painting-training/perspective"
-        title="透视训练"
-      ></navigation-item>
-      <navigation-second-item
-        to="/painting-training/perspective/double-lines-parallel"
-        title="两线平行"
-      ></navigation-second-item>
-      <navigation-second-item
-        to="/painting-training/perspective/double-lines-vertical"
-        title="两线垂直"
-      ></navigation-second-item>
-      <navigation-item
-        to="/review"
-        title="复习"
-      ></navigation-item>
-      <navigation-second-item
-        to="/review/grammar"
-        title="语法复习"
-      ></navigation-second-item>
-    </navigation>
-    <main-view><router-view></router-view></main-view>
+  <div>
+    <v-row style="height: 100%">
+      <v-col cols="2" class="overflow-auto" >
+        <v-list dense expand>
+          <v-list-group :value="true" v-for="nav of navs" :key="nav.title">
+            <template v-slot:activator>
+              <v-list-item-title>{{ nav.title }}</v-list-item-title>
+            </template>
+
+            <v-list-group
+              :value="true"
+              no-action
+              sub-group
+              v-for="child of nav.children"
+              :key="child.title"
+            >
+              <template v-slot:activator>
+                <v-list-item-content>
+                  <v-list-item-title>{{ child.title }}</v-list-item-title>
+                </v-list-item-content>
+              </template>
+
+              <v-list-item
+                v-for="{ title } of child.children"
+                :key="title"
+                link
+              >
+                <v-list-item-title>
+                  {{ title }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+          </v-list-group>
+        </v-list>
+      </v-col>
+      <v-col cols="10">
+        <router-view></router-view>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -46,6 +54,56 @@ export default {
   components: { Navigation, NavigationItem, NavigationSecondItem, MainView },
   data() {
     return {
+      navs: [
+        {
+          title: "透视训练",
+          children: [
+            {
+              title: "平行训练",
+              children: [
+                { title: "线线平行", icon: "mdi-account-multiple-outline" },
+                { title: "线面平行", icon: "mdi-account-multiple-outline" },
+                { title: "面面平行", icon: "mdi-account-multiple-outline" },
+              ],
+            },
+            {
+              title: "垂直训练",
+              children: [
+                { title: "线线垂直", icon: "mdi-account-multiple-outline" },
+                { title: "线面垂直", icon: "mdi-account-multiple-outline" },
+                { title: "面面垂直", icon: "mdi-account-multiple-outline" },
+              ],
+            },
+            {
+              title: "成角训练",
+              children: [
+                { title: "线线成角", icon: "mdi-account-multiple-outline" },
+                { title: "线面成角", icon: "mdi-account-multiple-outline" },
+                { title: "面面成角", icon: "mdi-account-multiple-outline" },
+              ],
+            },
+            {
+              title: "成角训练",
+              children: [
+                { title: "线线成角", icon: "mdi-account-multiple-outline" },
+                { title: "线面成角", icon: "mdi-account-multiple-outline" },
+                { title: "面面成角", icon: "mdi-account-multiple-outline" },
+              ],
+            },
+          ],
+        },
+        {
+          title: "渲染训练",
+          children: [
+            {
+              title: "明度训练",
+              children: [
+                { title: "线线平行", icon: "mdi-account-multiple-outline" },
+              ],
+            },
+          ],
+        },
+      ],
       user: {
         uid: 1,
       },
@@ -53,9 +111,9 @@ export default {
   },
   created() {
     // 初始化scene
-    console.log(store.getters.scene)
+    console.log(store.getters.scene);
     if (!store.getters.scene) {
-      console.log(111111111)
+      console.log(111111111);
       this.setScene(new THREE.Scene());
     }
     // 初始化canvas

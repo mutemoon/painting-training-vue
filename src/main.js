@@ -4,6 +4,7 @@ import store from './store'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 require('./assets/css/base.css')
+require('./assets/css/materialdesignicons.min.css')
 
 String.prototype.toNumber = function () {return /^-?\d+\.?\d*$/.test(this) ? parseFloat(this) : 0}
 Vue.directive('num', {
