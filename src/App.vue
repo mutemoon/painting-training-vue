@@ -23,12 +23,12 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar class="rounded-t-0" color="purple" elevation="1" rounded app>
+    <v-app-bar class="rounded-t-0" color="primary" elevation="1" rounded app>
       <v-app-bar-nav-icon
         color="white"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-app-bar-title class="white--text">温故知新</v-app-bar-title>
+      <v-app-bar-title class="white--text">绘画训练</v-app-bar-title>
     </v-app-bar>
 
     <!-- 根据应用组件来调整你的内容 -->
@@ -36,9 +36,9 @@
       <router-view></router-view>
     </v-main>
 
-    <v-footer app>
+    <!-- <v-footer app> -->
       <!-- -->
-    </v-footer>
+    <!-- </v-footer> -->
   </v-app>
 </template>
 

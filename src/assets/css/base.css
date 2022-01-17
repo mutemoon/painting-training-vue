@@ -15,3 +15,10 @@ body {
 .v-app-bar{
   flex-grow: 0;
 }
+
+.canvas_container {
+  width: 100%;
+  /* height: calc(100vh-64px); */
+  height: calc(100vh - 64px - 60px - 24px);;
+  /* box-shadow: 0px 0px 5px #aaaaaa; */
+}

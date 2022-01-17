@@ -19,7 +19,7 @@ export default {
     // let width, height;
     // [width, height] = [this.$el.offsetWidth, this.$el.offsetHeight];
     // camera = new THREE.OrthographicCamera(
-    //   ...[width / -2, width / 2, height / 2, height / -2], 
+    //   ...[width / -2, width / 2, height / 2, height / -2],
     //   1,
     //   1000
     // );
