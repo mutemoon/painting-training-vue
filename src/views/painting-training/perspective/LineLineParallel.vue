@@ -68,6 +68,11 @@ export default {
     console.log(store.getters.scene);
   },
   methods: {
+    init(){
+
+    },
+
+    
     ...mapActions(["setScene"]),
   },
 };

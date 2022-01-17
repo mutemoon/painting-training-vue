@@ -32,13 +32,8 @@
     </v-app-bar>
 
     <!-- 根据应用组件来调整你的内容 -->
-    <v-main>
-      <!-- 给应用提供合适的间距 -->
-      <v-container fluid style="height:100%;">
-        <!-- <v-card class="px-6 pt-10 pb-14" elevation="4" > -->
-          <router-view></router-view>
-        <!-- </v-card> -->
-      </v-container>
+    <v-main style="height:100%;">
+      <router-view></router-view>
     </v-main>
 
     <v-footer app>

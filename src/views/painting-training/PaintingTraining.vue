@@ -1,44 +1,38 @@
 <template>
-  <div>
-    <v-row style="height: 100%">
-      <v-col cols="2" class="overflow-auto" >
-        <v-list dense expand>
-          <v-list-group :value="true" v-for="nav of navs" :key="nav.title">
+  <v-row class="mt-0 ma-1" justify="space-around" style="height: 100%;">
+    <v-col cols="2" style="height: 100%; overflow: auto;box-shadow:1px;">
+      <v-list dense expand>
+        <v-list-group :value="true" v-for="nav of navs" :key="nav.title">
+          <template v-slot:activator>
+            <v-list-item-title>{{ nav.title }}</v-list-item-title>
+          </template>
+
+          <v-list-group
+            :value="true"
+            no-action
+            sub-group
+            v-for="child of nav.children"
+            :key="child.title"
+          >
             <template v-slot:activator>
-              <v-list-item-title>{{ nav.title }}</v-list-item-title>
+              <v-list-item-content>
+                <v-list-item-title>{{ child.title }}</v-list-item-title>
+              </v-list-item-content>
             </template>
 
-            <v-list-group
-              :value="true"
-              no-action
-              sub-group
-              v-for="child of nav.children"
-              :key="child.title"
-            >
-              <template v-slot:activator>
-                <v-list-item-content>
-                  <v-list-item-title>{{ child.title }}</v-list-item-title>
-                </v-list-item-content>
-              </template>
-
-              <v-list-item
-                v-for="{ title } of child.children"
-                :key="title"
-                link
-              >
-                <v-list-item-title>
-                  {{ title }}
-                </v-list-item-title>
-              </v-list-item>
-            </v-list-group>
+            <v-list-item v-for="{ title } of child.children" :key="title" link>
+              <v-list-item-title>
+                {{ title }}
+              </v-list-item-title>
+            </v-list-item>
           </v-list-group>
-        </v-list>
-      </v-col>
-      <v-col cols="10">
-        <router-view></router-view>
-      </v-col>
-    </v-row>
-  </div>
+        </v-list-group>
+      </v-list>
+    </v-col>
+    <v-col cols="9">
+      <router-view></router-view>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -111,9 +105,7 @@ export default {
   },
   created() {
     // 初始化scene
-    console.log(store.getters.scene);
     if (!store.getters.scene) {
-      console.log(111111111);
       this.setScene(new THREE.Scene());
     }
     // 初始化canvas
