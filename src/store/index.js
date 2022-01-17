@@ -17,6 +17,7 @@ const store = new Vuex.Store({
     },
     canvas: null,
     scene: null,
+    renderer: null
   },
   mutations: {
     editNickname: function (state, newNickname) {
@@ -33,6 +34,9 @@ const store = new Vuex.Store({
     },
     SET_SCENE: (state, scene) => {
       state.scene = scene
+    },
+    SET_RENDERER: (state, renderer) => {
+      state.renderer = renderer
     },
   },
 
@@ -52,12 +56,18 @@ const store = new Vuex.Store({
     }, canvas) => {
       commit("SET_CANVAS", canvas)
     },
+    setRenderer: ({
+      commit
+    }, renderer) => {
+      commit("SET_RENDERER", renderer)
+    },
   },
 
   getters: {
     canvasInfo: (state) => state.canvasInfo,
     scene: (state) => state.scene,
     canvas: (state) => state.canvas,
+    renderer: (state) => state.renderer,
   }
 })
 

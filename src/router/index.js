@@ -9,6 +9,7 @@ const User = () => import('../components/User')
 const Unknow = () => import('../components/Unknow')
 const Vocabulary = () => import('../components/vocabulary/Vocabulary')
 const LineLineParallel = () => import('../views/painting-training/perspective/LineLineParallel')
+const LineLinePerpendicular = () => import('../views/painting-training/perspective/LineLinePerpendicular')
 const PaintingTraining = () => import('../views/painting-training/PaintingTraining')
 const Grammar = () => import('../views/review/Grammar')
 
@@ -86,6 +87,10 @@ const routes = [{
       {
         path: 'line-line-parallel',
         component: LineLineParallel
+      },
+      {
+        path: 'line-line-perpendicular',
+        component: LineLinePerpendicular
       },
     ]
   },

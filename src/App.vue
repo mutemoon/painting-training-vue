@@ -23,27 +23,24 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar class="rounded-t-0" color="purple" elevation="1" rounded app>
+    <v-app-bar class="rounded-t-0" color="primary" elevation="1" rounded app>
       <v-app-bar-nav-icon
         color="white"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-app-bar-title class="white--text">温故知新</v-app-bar-title>
+      <v-app-bar-title class="white--text">绘画训练</v-app-bar-title>
     </v-app-bar>
 
     <!-- 根据应用组件来调整你的内容 -->
-    <v-main>
-      <!-- 给应用提供合适的间距 -->
-      <v-container fluid style="height:100%;">
+    <v-main style="height: calc(100% - 64px);">
         <!-- <v-card class="px-6 pt-10 pb-14" elevation="4" > -->
           <router-view></router-view>
         <!-- </v-card> -->
-      </v-container>
     </v-main>
 
-    <v-footer app>
+    <!-- <v-footer app> -->
       <!-- -->
-    </v-footer>
+    <!-- </v-footer> -->
   </v-app>
 </template>
 
