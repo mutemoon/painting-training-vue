@@ -36,20 +36,25 @@
             <v-btn block outlined color="primary">下一个 (G)</v-btn>
           </v-col>
           <v-col cols="2">
-            <v-btn block outlined color="primary">重来 (R)</v-btn>
+            <v-btn
+              block
+              outlined
+              color="primary"
+              @click="$refs.view.$emit('reset')"
+              >重来 (R)</v-btn
+            >
           </v-col>
           <v-col cols="2">
             <v-btn block outlined color="primary">显示答案 (SPACE)</v-btn>
           </v-col>
           <v-col cols="2">
-            <v-btn block color="primary">撤销 (CTRL+Z)</v-btn>
-          </v-col>
-          <v-col cols="2">
-            <v-btn block color="primary">恢复 (CTRL+Y)</v-btn>
+            <v-btn block color="primary" @click="$refs.view.$emit('undo')"
+              >撤销 (CTRL+Z)</v-btn
+            >
           </v-col>
         </v-row>
       </v-card>
-      <router-view></router-view>
+      <router-view ref="view"></router-view>
     </v-col>
   </v-row>
 </template>
@@ -61,6 +66,7 @@ import NavigationSecondItem from "@/components/Navigation/NavigationSecondItem";
 import MainView from "../../components/MainView/MainView.vue";
 import store from "@/store";
 import { mapActions } from "vuex";
+
 const THREE = require("three");
 
 export default {
@@ -142,8 +148,19 @@ export default {
       );
     }
 
+    window.addEventListener("keydown", (event) => {
+      if (event.ctrlKey == true && event.keyCode == 90) {
+        this.$refs.view.$emit("undo")
+      }
+
+      if (event.ctrlKey == true && event.keyCode == 89) {
+        this.$refs.view.$emit("redo")
+      }
+    })
+
     // 用来Debug
     window.scene = store.getters.scene;
+    window.renderer = store.getters.renderer;
   },
   methods: {
     ...mapActions(["setScene", "setCanvas", "setRenderer"]),

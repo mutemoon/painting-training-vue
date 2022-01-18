@@ -11,6 +11,7 @@
     "axios": "^0.24.0",
     "babel-eslint": "^10.1.0",
     "core-js": "^3.6.5",
+    "prettier": "^1.8.1",
     "three": "^0.131.3",
     "vue": "^2.6.11",
     "vue-router": "^3.5.2",
