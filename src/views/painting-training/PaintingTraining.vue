@@ -31,7 +31,7 @@
     </v-col>
     <v-col cols="10">
       <v-card class="mb-3 pb-3 px-3">
-        <v-row>
+        <v-row align="center">
           <v-col cols="2">
             <v-btn block outlined color="primary">下一个 (G)</v-btn>
           </v-col>
@@ -52,9 +52,12 @@
               >撤销 (CTRL+Z)</v-btn
             >
           </v-col>
+          <v-col cols="2" offset="2">
+            <v-switch v-model="immediately" label="完成答题后显示答案"></v-switch>
+          </v-col>
         </v-row>
       </v-card>
-      <router-view ref="view"></router-view>
+      <router-view :immediately="immediately" ref="view"></router-view>
     </v-col>
   </v-row>
 </template>
@@ -131,6 +134,7 @@ export default {
           ],
         },
       ],
+      immediately: true,
       user: {
         uid: 1,
       },
@@ -149,14 +153,18 @@ export default {
     }
 
     window.addEventListener("keydown", (event) => {
+      if (event.keyCode == 82) {
+        this.$refs.view.$emit("reset");
+      }
+
       if (event.ctrlKey == true && event.keyCode == 90) {
-        this.$refs.view.$emit("undo")
+        this.$refs.view.$emit("undo");
       }
 
       if (event.ctrlKey == true && event.keyCode == 89) {
-        this.$refs.view.$emit("redo")
+        this.$refs.view.$emit("redo");
       }
-    })
+    });
 
     // 用来Debug
     window.scene = store.getters.scene;

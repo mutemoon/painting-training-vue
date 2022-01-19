@@ -33,6 +33,8 @@ export default {
     };
   },
 
+  prop: ["immediately"],
+
   mounted() {
     this.init();
   },
@@ -52,6 +54,7 @@ export default {
         1,
         1000
       );
+
       this.camera.position.set(0, 0, -1);
       this.camera.lookAt(0, 0, 0);
 
@@ -67,6 +70,11 @@ export default {
     reset() {
       this.destroy();
       this.state = STATE.waitC;
+      this.lineCStart = null;
+      this.lineCEnd = null;
+      this.lineDStart = null;
+      this.lineDEnd = null;
+
       // 随机一个消失点
       this.logicPointA = utils.random_logic_point();
       this.pointA = this.logicPointA.toPaperPoint();
@@ -151,6 +159,14 @@ export default {
       }
     },
 
+    showAnswer() {
+      if (this.state == STATE.done) {
+        
+
+        new Line()
+      }
+    },
+
     undo() {
       switch (this.state) {
         case STATE.drawingC:
@@ -197,9 +213,10 @@ export default {
     lineCStart: function (newPoint, oldPoint) {
       if (!newPoint && this.lineC) {
         this.removeFromScene(this.lineC);
-        this.lineC = null
+        this.lineC = null;
       }
     },
+
     lineCEnd: function (newPoint, oldPoint) {
       if (newPoint) {
         if (!this.lineC) {
@@ -216,12 +233,14 @@ export default {
         }
       }
     },
+
     lineDStart: function (newPoint, oldPoint) {
       if (!newPoint && this.lineD) {
         this.lineD && this.removeFromScene(this.lineD);
-        this.lineD = null
+        this.lineD = null;
       }
     },
+
     lineDEnd: function (newPoint, oldPoint) {
       if (newPoint) {
         if (!this.lineD) {
@@ -238,6 +257,12 @@ export default {
         }
       }
     },
+
+    state: function (newState, oldState) {
+      if (newState === STATE.done && this.immediately) {
+        this.showAnswer();
+      }
+    }
   },
 };
 </script>
