@@ -2,7 +2,7 @@ const THREE = require("three");
 import store from "@/store";
 
 THREE.Vector2.prototype.toPaperPoint = function () {
-  return new THREE.Vector2(this.x, this.y).multiplyScalar(store.getters.height / 2);
+  return new THREE.Vector2(this.x, this.y).multiplyScalar(store.getters.scale);
 }
 
 export function random_logic_point() {
@@ -51,7 +51,7 @@ export function RayLine(start, over, color = 0x0) {
   return new Line(start, v2.add(start), color)
 }
 
-class VanishingPoint extends THREE.Vector2 {
+export class VanishingPoint extends THREE.Vector2 {
   angleX;
   angleY;
   angleO;
@@ -65,7 +65,7 @@ class VanishingPoint extends THREE.Vector2 {
   }
 
   set x(v) {
-    this.angleX = Math.atan(v)
+    this.angleX = Math.atan(v) / Math.PI * 180
   }
 
   get y() {
@@ -73,7 +73,7 @@ class VanishingPoint extends THREE.Vector2 {
   }
 
   set y(v) {
-    this.angleY = Math.atan(v)
+    this.angleY = Math.atan(v) / Math.PI * 180
   }
 
   constructor({
@@ -93,11 +93,15 @@ class VanishingPoint extends THREE.Vector2 {
   }
 
   perpendicularLine() {
-    return new VanishingLine({A: this.x, B: this.y, C: 1})
+    return new VanishingLine({
+      A: this.x,
+      B: this.y,
+      C: 1
+    })
   }
 
   perpendicularPoint() {
-    return this.perpendicularLine().verticalPoint()
+    return this.perpendicularLine().verticalPoint
   }
 
   vanishingLine() {
@@ -107,13 +111,21 @@ class VanishingPoint extends THREE.Vector2 {
   }
 }
 
-class VanishingLine {
+export class VanishingLine {
+  _A;
+  _B;
+  _C;
   A;
   B;
   C;
+  obj;
 
   get verticalPoint() {
-    let {A, B, C} = this
+    let {
+      A,
+      B,
+      C
+    } = this
     return new VanishingPoint({
       x: -(A * C) / (A * A + B * B),
       y: -(B * C) / (A * A + B * B)
@@ -133,8 +145,9 @@ class VanishingLine {
     A,
     B,
     C,
-    color=0x0
+    color = 0x0
   }) {
+    this.obj = new Line(new THREE.Vector2(0, 0), new THREE.Vector2(0, 0), color)
     if (verticalPoint) {
       this.verticalPoint = verticalPoint
     } else if (A && B && C) {
@@ -146,13 +159,95 @@ class VanishingLine {
     }
   }
 
-  get lineObj(){
-    
+  get A() {
+    return this._A
+  }
+
+  set A(v) {
+    this._A = v
+    updateObj()
+  }
+
+  get B() {
+    return this._B
+  }
+
+  set B(v) {
+    this._B = v
+    updateObj()
+  }
+
+  get C() {
+    return this._C
+  }
+
+  set C(v) {
+    this._C = v
+    updateObj()
+  }
+
+  updateObj() {
+    if ([this.A, this.B, this.C, this.obj].all(v => v !== undefined)) {
+      let {
+        scale,
+        width
+      } = store.getters
+      let half = (width / scale) / 2
+      this.obj.start = new THREE.Vector2(half, (-this.C - this.A * half) / this.B)
+      this.obj.end = new THREE.Vector2(-half, (-this.C + this.A * half) / this.B)
+    }
+  }
+}
+
+class Line {
+  _start;
+  _end;
+  obj;
+
+  get start() {
+    return this._start
+  }
+
+  set start(v) {
+    this._start = v
+    this.update()
+  }
+
+  get end() {
+    return this._end
+  }
+
+  set end(v) {
+    this._end = v
+    this.update()
+  }
+
+  constructor(start, end, color = 0x0) {
+    let material = new THREE.LineBasicMaterial({
+      color: color,
+    })
+    let geometry = new THREE.BufferGeometry();
+    geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
+    this.obj = new THREE.Line(geometry, material);
+
+    [this.start, this.end] = [start, end]
+  }
+
+  update() {
+    if (this.obj && this._start && this._end) {
+      this.obj.geometry.attributes.position.array = new Float32Array([
+        ...this._start.toPaperPoint().toArray(),
+        0,
+        ...this._end.toPaperPoint().toArray(),
+        0,
+      ]);
+      this.obj.geometry.attributes.position.needsUpdate = true;
+    }
   }
 }
 
 let x = new VanishingPoint({
-  x: 89.9999,
-  y: 89.9999
+  angleX: 45,
+  angleY: 45
 })
-console.log(x, x.length());
+console.log(x, x.length(), x.perpendicularLine(), x.perpendicularPoint());
