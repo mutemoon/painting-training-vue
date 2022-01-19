@@ -161,7 +161,9 @@ export default {
 
     showAnswer() {
       if (this.state == STATE.done) {
-        
+        let remotePoint = this.pointA.distanceTo(this.lineDStart) > this.pointA.distanceTo(this.lineDEnd) ? this.lineDStart : this.lineDEnd
+
+        this.lineC = 
 
         new Line()
       }
