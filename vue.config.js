@@ -4,6 +4,7 @@ module.exports = {
     'vuetify'
   ],
   devServer: {
+    host: 'localhost',
     proxy: { //配置跨域
       '/api': {
         target: 'http://www.mutemoon.com:8080', //这里后台的地址模拟的;应该填写你们真实的后台接口

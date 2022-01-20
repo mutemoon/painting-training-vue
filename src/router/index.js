@@ -22,6 +22,7 @@ const routes = [{
   {
     path: '/home',
     component: Home,
+    redirect: '/painting-training/line-line-perpendicular',
     meta: {
       title: '首页'
     },

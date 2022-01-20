@@ -5,6 +5,10 @@ THREE.Vector2.prototype.toPaperPoint = function () {
   return new THREE.Vector2(this.x, this.y).multiplyScalar(store.getters.scale);
 }
 
+THREE.Vector2.prototype.toLogicPoint = function () {
+  return new THREE.Vector2(this.x, this.y).divideScalar(store.getters.scale);
+}
+
 export function random_logic_point() {
   let angle_x = (Math.random() - 0.5) * Math.PI;
   let angle_y = (Math.random() - 0.5) * Math.PI;
@@ -23,19 +27,6 @@ export function random_constraint_logic_point(constraint) {
   return new THREE.Vector2(Math.tan(angle_x), Math.tan(angle_y));
 }
 
-
-export function Line(start, end, color = 0x0) {
-  let ma = new THREE.LineBasicMaterial({
-    color: color,
-  })
-  let line = new THREE.BufferGeometry();
-  line.attributes.position = new THREE.BufferAttribute(new Float32Array([
-    start.x, start.y, 0,
-    end.x, end.y, 0,
-  ]), 3);
-  return new THREE.Line(line, ma);
-}
-
 export function showObjects(scene, objs) {
   objs.forEach(v => scene.add(v))
 }
@@ -44,12 +35,7 @@ export function removeObjects(scene, objs) {
   objs.forEach(v => scene.remove(v))
 }
 
-// 传入射线起始点、要经过的视图上的点，返回要经过整个视图的射线
-export function RayLine(start, over, color = 0x0) {
-  let v1 = over.sub(start)
-  let v2 = v1.multiplyScalar(1 + (Math.sqrt(Math.pow(store.getters.width, 2) + Math.pow(store.getters.height, 2)) / v1.length()))
-  return new Line(start, v2.add(start), color)
-}
+
 
 export class VanishingPoint extends THREE.Vector2 {
   angleX;
@@ -76,11 +62,29 @@ export class VanishingPoint extends THREE.Vector2 {
     this.angleY = Math.atan(v) / Math.PI * 180
   }
 
+  get paperX() {
+    return this.x * store.getters.scale
+  }
+  
+  set paperX(v) {
+    this.x = v / store.getters.scale
+  }
+  
+  get paperY() {
+    return this.y * store.getters.scale
+  }
+  
+  set paperY(v) {
+    this.y = v / store.getters.scale
+  }
+  
   constructor({
     angleX,
     angleY,
     x,
-    y
+    y,
+    paperX,
+    paperY,
   }) {
     super()
     if (angleX && angleY) {
@@ -89,6 +93,8 @@ export class VanishingPoint extends THREE.Vector2 {
     } else if (x && y) {
       this.x = x
       this.y = y
+    } else if (paperX && paperY) {
+
     }
   }
 
@@ -109,16 +115,48 @@ export class VanishingPoint extends THREE.Vector2 {
       verticalPoint: this
     })
   }
+  
+  static randomWithConstraint(constraint){
+    return new VanishingPoint({angleX: (Math.random() - 0.5) * (constraint / 90) * 180, angleY: (Math.random() - 0.5) * (constraint / 90) * 180})
+  }
+
+  static random(){
+    return VanishingPoint.randomWithConstraint(90)
+  }
 }
 
 export class VanishingLine {
   _A;
   _B;
   _C;
-  A;
-  B;
-  C;
-  obj;
+  line;
+
+  get A() {
+    return this._A
+  }
+
+  set A(v) {
+    this._A = v
+    this.update()
+  }
+
+  get B() {
+    return this._B
+  }
+
+  set B(v) {
+    this._B = v
+    this.update()
+  }
+
+  get C() {
+    return this._C
+  }
+
+  set C(v) {
+    this._C = v
+    this.update()
+  }
 
   get verticalPoint() {
     let {
@@ -147,7 +185,7 @@ export class VanishingLine {
     C,
     color = 0x0
   }) {
-    this.obj = new Line(new THREE.Vector2(0, 0), new THREE.Vector2(0, 0), color)
+    this.line = new Line(color=color)
     if (verticalPoint) {
       this.verticalPoint = verticalPoint
     } else if (A && B && C) {
@@ -159,47 +197,21 @@ export class VanishingLine {
     }
   }
 
-  get A() {
-    return this._A
-  }
-
-  set A(v) {
-    this._A = v
-    updateObj()
-  }
-
-  get B() {
-    return this._B
-  }
-
-  set B(v) {
-    this._B = v
-    updateObj()
-  }
-
-  get C() {
-    return this._C
-  }
-
-  set C(v) {
-    this._C = v
-    updateObj()
-  }
-
-  updateObj() {
-    if ([this.A, this.B, this.C, this.obj].all(v => v !== undefined)) {
+  update() {
+    if ([this.A, this.B, this.C, this.line].all(v => v !== undefined)) {
       let {
         scale,
         width
       } = store.getters
       let half = (width / scale) / 2
-      this.obj.start = new THREE.Vector2(half, (-this.C - this.A * half) / this.B)
-      this.obj.end = new THREE.Vector2(-half, (-this.C + this.A * half) / this.B)
+      this.line.start = new THREE.Vector2(half, (-this.C - this.A * half) / this.B)
+      this.line.end = new THREE.Vector2(-half, (-this.C + this.A * half) / this.B)
     }
   }
 }
 
-class Line {
+export class Line {
+  color;
   _start;
   _end;
   obj;
@@ -222,32 +234,73 @@ class Line {
     this.update()
   }
 
-  constructor(start, end, color = 0x0) {
+  constructor(start = null, end = null, color = 0x0) {
+    this.color = color
     let material = new THREE.LineBasicMaterial({
-      color: color,
+      color
     })
     let geometry = new THREE.BufferGeometry();
     geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
     this.obj = new THREE.Line(geometry, material);
+    store.getters.scene.add(this.obj)
 
     [this.start, this.end] = [start, end]
   }
 
   update() {
-    if (this.obj && this._start && this._end) {
-      this.obj.geometry.attributes.position.array = new Float32Array([
-        ...this._start.toPaperPoint().toArray(),
-        0,
-        ...this._end.toPaperPoint().toArray(),
-        0,
-      ]);
+    if (this.obj) {
+      let array;
+      if (this._start && this._end) {
+        array = new Float32Array([
+          ...this._start.toArray(),
+          0,
+          ...this._end.toArray(),
+          0,
+        ]);
+      } else {
+        array = new Float32Array(6)
+      }
+      this.obj.geometry.attributes.position.array = array;
       this.obj.geometry.attributes.position.needsUpdate = true;
     }
   }
+
+  toLogic() {
+    return new LogicLine(this.start.toLogicPoint(), this.end.toLogicPoint(), this.color)
+  }
 }
 
-let x = new VanishingPoint({
-  angleX: 45,
-  angleY: 45
-})
-console.log(x, x.length(), x.perpendicularLine(), x.perpendicularPoint());
+export class LogicLine extends Line {
+  constructor(...arg) {
+    super(...arg)
+  }
+
+  update() {
+    if (this.obj) {
+      let array;
+      if (this._start && this._end) {
+        array = new Float32Array([
+          ...this._start.toPaperPoint().toArray(),
+          0,
+          ...this._end.toPaperPoint().toArray(),
+          0,
+        ]);
+      } else {
+        array = new Float32Array(6)
+      }
+      this.obj.geometry.attributes.position.array = array;
+      this.obj.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+
+}
+// 传入射线起始点、要经过的视图上的点，返回要经过整个视图的射线
+export class RayLine extends LogicLine {
+  constructor(start, over, color = 0x0) {
+    super(color = color)
+    this.start = start
+    let v = over.sub(start)
+    this.end = v.multiplyScalar(1 + (new THREE.Vector2(store.getters.width, store.getters.height).length() / v.length())).add(start)
+  }
+}
