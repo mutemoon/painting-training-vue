@@ -68,20 +68,25 @@ export default {
       this.state = STATE.waitC;
 
       // 随机一个消失点
-      this.pointA = utils.VanishingPoint.random();
+      this.pointA = utils.Point.random();
 
       // 随机两条线
-      this.lineA = new utils.RayLine(
-        this.pointA,
-        utils.VanishingPoint.randomWithConstraint(45)
-      );
-      this.lineB = new utils.RayLine(
-        this.pointA,
-        utils.VanishingPoint.randomWithConstraint(45)
-      );
+      this.lineA = new utils.Line({
+        pointA: this.pointA,
+        pointB: utils.Point.randomWithConstraint(45),
+        startWithA: true
+      });
+      this.lineB = new utils.Line({
+        pointA: this.pointA,
+        pointB: utils.Point.randomWithConstraint(45),
+        startWithA: true
+      });
 
-      this.lineC = new utils.Line()
-      this.lineD = new utils.Line()
+      for (let i = 0; i < 100; i++) {
+        new utils.Line({pointA: utils.Point.randomWithConstraint(45), pointB: utils.Point.randomWithConstraint(45), startWithA: true, endWithB: true, color: 0xff00ff})
+      }
+      this.lineC = new utils.Line({startWithA: true, endWithB: true})
+      this.lineD = new utils.Line({startWithA: true, endWithB: true});
     },
 
     update(time) {
@@ -110,43 +115,43 @@ export default {
     },
 
     handleDown({ offsetX, offsetY }) {
-      let point = new utils.VanishingPoint({
+      let point = new utils.Point({
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2
       });
 
       switch (this.state) {
         case STATE.waitC:
-          this.lineC.start = point;
+          this.lineC.pointA = point;
           this.state = STATE.drawingC;
           break;
         case STATE.drawingC:
-          this.lineC.end = point;
+          this.lineC.pointB = point;
           this.state = STATE.waitD;
           break;
         case STATE.waitD:
-          this.lineD.start = point;
+          this.lineD.pointA = point;
           this.state = STATE.drawingD;
           break;
         case STATE.drawingD:
-          this.lineD.end = point;
+          this.lineD.pointB = point;
           this.state = STATE.done;
           break;
       }
     },
 
     handleMove({ offsetX, offsetY }) {
-      let point = new THREE.Vector2(
-        offsetX - store.getters.width / 2,
-        -offsetY + store.getters.height / 2
-      );
+      let point = new utils.Point({
+        paperX: offsetX - store.getters.width / 2,
+        paperY: -offsetY + store.getters.height / 2
+      });
 
       switch (this.state) {
         case STATE.drawingC:
-          this.lineC.end = point;
+          this.lineC.pointB = point;
           break;
         case STATE.drawingD:
-          this.lineD.end = point;
+          this.lineD.pointB = point;
           break;
       }
     },
@@ -165,19 +170,19 @@ export default {
     undo() {
       switch (this.state) {
         case STATE.drawingC:
-          this.lineC.start = null;
+          this.lineC.pointA = null;
           this.state = STATE.waitC;
           break;
         case STATE.waitD:
-          this.lineC.end = null;
+          this.lineC.pointB = null;
           this.state = STATE.drawingC;
           break;
         case STATE.drawingD:
-          this.lineD.start = null;
+          this.lineD.pointA = null;
           this.state = STATE.waitD;
           break;
         case STATE.done:
-          this.lineD.end = null;
+          this.lineD.pointB = null;
           this.state = STATE.drawingD;
           break;
       }

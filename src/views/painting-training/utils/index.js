@@ -37,10 +37,9 @@ export function removeObjects(scene, objs) {
 
 
 
-export class VanishingPoint extends THREE.Vector2 {
+export class Point extends THREE.Vector2 {
   angleX;
   angleY;
-  angleO;
 
   get angleO() {
     return Math.atan(this.length()) * 180 / Math.PI
@@ -78,6 +77,7 @@ export class VanishingPoint extends THREE.Vector2 {
     this.y = v / store.getters.scale
   }
 
+
   constructor({
     angleX,
     angleY,
@@ -87,19 +87,17 @@ export class VanishingPoint extends THREE.Vector2 {
     paperY,
   }) {
     super()
-    if (angleX && angleY) {
-      this.angleX = angleX
-      this.angleY = angleY
-    } else if (x && y) {
-      this.x = x
-      this.y = y
-    } else if (paperX && paperY) {
-      this.paperX, this.paperY = paperX, paperY
+    if (angleX !== undefined && angleY !== undefined) {
+      [this.angleX, this.angleY] = [angleX, angleY]
+    } else if (x !== undefined && y !== undefined) {
+      [this.x, this.y] = [x, y]
+    } else if (paperX !== undefined && paperY !== undefined) {
+      [this.paperX, this.paperY] = [paperX, paperY]
     }
   }
 
   perpendicularLine() {
-    return new VanishingLine({
+    return new Line({
       A: this.x,
       B: this.y,
       C: 1
@@ -111,7 +109,7 @@ export class VanishingPoint extends THREE.Vector2 {
   }
 
   vanishingLine() {
-    return new VanishingLine({
+    return new Line({
       verticalPoint: this
     })
   }
@@ -124,54 +122,44 @@ export class VanishingPoint extends THREE.Vector2 {
     return points.sort((a, b) => this.distanceTo(b) - this.distanceTo(a))[0]
   }
 
+  paperLength() {
+    return Math.sqrt(this.paperX ** 2 + this.paperY ** 2)
+  }
+
+  toPaperArray() {
+    return [this.paperX, this.paperY]
+  }
+
   static randomWithConstraint(constraint) {
-    return new VanishingPoint({
+    return new Point({
       angleX: (Math.random() - 0.5) * (constraint / 90) * 180,
       angleY: (Math.random() - 0.5) * (constraint / 90) * 180
     })
   }
 
   static random() {
-    return VanishingPoint.randomWithConstraint(90)
+    return Point.randomWithConstraint(90)
   }
 }
 
 
-export class VanishingLine {
-  _start;
-  _end;
-
-  _controllA;
-  _controllB;
+export class Line {
+  _pointA;
+  _pointB;
+  startWithA;
+  endWithB;
   line;
 
   get A() {
-    this.calculateWhereToShow()
-    return this.get
-  }
-
-  set A(v) {
-
-    this._A = v
-    this.update()
+    return this.pointA.y - this.pointB.y
   }
 
   get B() {
-    return (this.pointB.y - this.pointA.y)
-  }
-
-  set B(v) {
-    this._B = v
-    this.update()
+    return this.pointA.x - this.pointB.x
   }
 
   get C() {
-    return this._C
-  }
-
-  set C(v) {
-    this._C = v
-    this.update()
+    return (this.pointA.y * (this.pointB.x - this.pointA.x)) - (this.pointA.x * (this.pointB.y - this.pointA.y))
   }
 
   get verticalPoint() {
@@ -180,69 +168,95 @@ export class VanishingLine {
       B,
       C
     } = this
-    return new VanishingPoint({
+    return new Point({
       x: -(A * C) / (A * A + B * B),
       y: -(B * C) / (A * A + B * B)
     })
   }
 
   set verticalPoint(point) {
-    this.A = point.x
-    this.B = point.y
-    this.C = -Math.pow(point.length(), 2)
+    let [A, B, C] = [point.paperX, point.paperY, -Math.pow(point.paperLength(), 2)]
+    this.pointA = new Point({
+      paperX: (-B * (store.getters.height / 2) - C) / A,
+      paperY: store.getters.height / 2
+    })
+    this.pointB = new Point({
+      paperX: (B * (store.getters.height / 2) - C) / A,
+      paperY: -store.getters.height / 2
+    })
+    this.update()
+  }
+
+  get pointA() {
+    return this._pointA
+  }
+
+  set pointA(v) {
+    this._pointA = v
+    this.update()
+  }
+
+  get pointB() {
+    return this._pointB
+  }
+
+  set pointB(v) {
+    this._pointB = v
+    this.update()
   }
 
   constructor({
     verticalPoint,
     pointA,
     pointB,
-    startWithA=true,
-    endWithB=true,
+    startWithA = false,
+    endWithB = false,
     A,
     B,
     C,
     color = 0x0
   }) {
-    this.line = new LineObject(color = color)
-    if (verticalPoint) {
-      this.verticalPoint = verticalPoint
-    } else if (A && B && C) {
-      [this.A, this.B, this.C] = [A, B, C]
-    } else if (pointA && pointB) {
-      this.A = (pointB.y - pointA.y)
-      this.B = -(pointB.x - pointA.x)
-      this.C = (pointA.y * (pointB.x - pointA.x)) - (pointA.x * (pointB.y - pointA.y))
-    } else {
-      [this.pointA, this.pointB, this.startWithA, this.endWithB] = [pointA, pointB, startWithA, endWithB]
+    [this.startWithA, this.endWithB] = [startWithA, endWithB];
+    this.line = new LineObject({
+      color
+    })
+    if (verticalPoint !== undefined) {
+      this.verticalPoint = verticalPoint;
+    } else if (A !== undefined && B !== undefined && C !== undefined) {
+      this.pointA = new Point((-B * (store.getters.height / 2) - C) / A, store.getters.height / 2);
+      this.pointB = new Point((B * (store.getters.height / 2) - C) / A, -store.getters.height / 2);
+    } else if (pointA !== undefined && pointB !== undefined) {
+      [this.pointA, this.pointB] = [pointA, pointB];
     }
   }
 
   update() {
-    let {start, end} = this.calculateWhereToShow()
+    let {
+      start,
+      end
+    } = this.calculateWhereToShow()
     if (start && end && this.line) {
-      this.line.start = start.toPaperPoint()
-      this.line.end = end.toPaperPoint()
+      this.line.start = start
+      this.line.end = end
     }
   }
 
   calculateWhereToShow() {
-    let [pointAtTop, pointAtBottom] = [this.at({
-      y: store.getters.height / 2
-    }), this.at({
-      y: -store.getters.height / 2
-    })]
-
     let {
       pointA: start,
       pointB: end
     } = this
-    if (!this.startWithA && !this.startWithB) {
-      start = pointAtTop
-      end = pointAtBottom
-    } else if (this.startWithA && !this.startWithB) {
-      end = this.controllB.closerPoint([pointAtTop, pointAtBottom])
+    if (!start || !end) {
+      return {}
     }
 
+    let [pointAtTop, pointAtBottom] = [this.pointByPaperY(store.getters.height / 2), this.pointByPaperY(-store.getters.height / 2)]
+    if (!this.startWithA && !this.endWithB) {
+      start = pointAtTop
+      end = pointAtBottom
+    } else if (this.startWithA && !this.endWithB) {
+      end = this.pointA.fartherPoint(pointAtTop, pointAtBottom)
+    }
     return {
       start,
       end
@@ -253,29 +267,32 @@ export class VanishingLine {
     // this.
   }
 
-  calcX(y) {
-    return (-this.B * y - this.C) / this.A
+  pointByPaperX(paperX) {
+    return new Point({
+      paperX,
+      paperY: (-this.A * paperX - this.C) / this.B
+    })
   }
 
-  calcY(x) {
-    return (-this.A * x - this.C) / this.B
+  pointByPaperY(paperY) {
+    return new Point({
+      paperX: (-this.B * paperY - this.C) / this.A,
+      paperY,
+    })
   }
 
-  at({
-    x,
-    y
-  }) {
-    if (x) {
-      return VanishingPoint({
-        x,
-        y: this.calcY(x)
-      })
-    } else if (y) {
-      return VanishingPoint({
-        x: this.calcX(y),
-        y
-      })
-    }
+  pointByX(x) {
+    return new Point({
+      x,
+      y: (-this.A * x - this.C) / this.B
+    })
+  }
+
+  pointByY(y) {
+    return new Point({
+      x: (-this.B * y - this.C) / this.A,
+      y,
+    })
   }
 }
 
@@ -303,7 +320,11 @@ export class LineObject {
     this.update()
   }
 
-  constructor(start = null, end = null, color = 0x0) {
+  constructor({
+    start = undefined,
+    end = undefined,
+    color = 0x0
+  }) {
     this.color = color
     let material = new THREE.LineBasicMaterial({
       color
@@ -311,19 +332,18 @@ export class LineObject {
     let geometry = new THREE.BufferGeometry();
     geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
     this.obj = new THREE.Line(geometry, material);
-    store.getters.scene.add(this.obj)
-
-    [this.start, this.end] = [start, end]
+    store.getters.scene.add(this.obj);
+    [this.start, this.end] = [start, end];
   }
 
   update() {
     if (this.obj) {
       let array;
-      if (this._start && this._end) {
+      if (this.start && this.end) {
         array = new Float32Array([
-          ...this._start.toArray(),
+          ...this.start.toPaperArray(),
           0,
-          ...this._end.toArray(),
+          ...this.end.toPaperArray(),
           0,
         ]);
       } else {
@@ -339,7 +359,7 @@ export class LineObject {
   }
 }
 
-export class LogicLine extends Line {
+export class LogicLine extends LineObject {
   constructor(...arg) {
     super(...arg)
   }
