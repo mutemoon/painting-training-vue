@@ -66,10 +66,6 @@ export default {
     reset() {
       this.destroy();
       this.state = STATE.waitC;
-      this.lineCStart = null;
-      this.lineCEnd = null;
-      this.lineDStart = null;
-      this.lineDEnd = null;
 
       // 随机一个消失点
       this.pointA = utils.VanishingPoint.random();
@@ -114,10 +110,10 @@ export default {
     },
 
     handleDown({ offsetX, offsetY }) {
-      let point = new THREE.Vector2(
-        offsetX - store.getters.width / 2,
-        -offsetY + store.getters.height / 2
-      );
+      let point = new utils.VanishingPoint({
+        paperX: offsetX - store.getters.width / 2,
+        paperY: -offsetY + store.getters.height / 2
+      });
 
       switch (this.state) {
         case STATE.waitC:
@@ -157,9 +153,10 @@ export default {
 
     showAnswer() {
       if (this.state == STATE.done) {
-        let remotePoint = this.pointA.distanceTo(this.lineDStart) > this.pointA.distanceTo(this.lineDEnd) ? this.lineDStart : this.lineDEnd
+        let remotePoint = this.pointA.distanceTo(this.lineD.start) > this.pointA.distanceTo(this.lineD.end) ? this.lineD.end : this.lineD.start
         this.lineC.toLogic()
         this.remotePoint
+        new utils.VanishingLine({pointA: this.lineCStart, pointB: this.lineCEnd})
 
         this.lineAnswer = this.pointA.perpendicularLine()
       }

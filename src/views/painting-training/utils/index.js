@@ -65,19 +65,19 @@ export class VanishingPoint extends THREE.Vector2 {
   get paperX() {
     return this.x * store.getters.scale
   }
-  
+
   set paperX(v) {
     this.x = v / store.getters.scale
   }
-  
+
   get paperY() {
     return this.y * store.getters.scale
   }
-  
+
   set paperY(v) {
     this.y = v / store.getters.scale
   }
-  
+
   constructor({
     angleX,
     angleY,
@@ -94,7 +94,7 @@ export class VanishingPoint extends THREE.Vector2 {
       this.x = x
       this.y = y
     } else if (paperX && paperY) {
-
+      this.paperX, this.paperY = paperX, paperY
     }
   }
 
@@ -115,33 +115,49 @@ export class VanishingPoint extends THREE.Vector2 {
       verticalPoint: this
     })
   }
-  
-  static randomWithConstraint(constraint){
-    return new VanishingPoint({angleX: (Math.random() - 0.5) * (constraint / 90) * 180, angleY: (Math.random() - 0.5) * (constraint / 90) * 180})
+
+  closerPoint(...points) {
+    return points.sort((a, b) => this.distanceTo(a) - this.distanceTo(b))[0]
   }
 
-  static random(){
+  fartherPoint(...points) {
+    return points.sort((a, b) => this.distanceTo(b) - this.distanceTo(a))[0]
+  }
+
+  static randomWithConstraint(constraint) {
+    return new VanishingPoint({
+      angleX: (Math.random() - 0.5) * (constraint / 90) * 180,
+      angleY: (Math.random() - 0.5) * (constraint / 90) * 180
+    })
+  }
+
+  static random() {
     return VanishingPoint.randomWithConstraint(90)
   }
 }
 
+
 export class VanishingLine {
-  _A;
-  _B;
-  _C;
+  _start;
+  _end;
+
+  _controllA;
+  _controllB;
   line;
 
   get A() {
-    return this._A
+    this.calculateWhereToShow()
+    return this.get
   }
 
   set A(v) {
+
     this._A = v
     this.update()
   }
 
   get B() {
-    return this._B
+    return (this.pointB.y - this.pointA.y)
   }
 
   set B(v) {
@@ -180,12 +196,14 @@ export class VanishingLine {
     verticalPoint,
     pointA,
     pointB,
+    startWithA=true,
+    endWithB=true,
     A,
     B,
     C,
     color = 0x0
   }) {
-    this.line = new Line(color=color)
+    this.line = new LineObject(color = color)
     if (verticalPoint) {
       this.verticalPoint = verticalPoint
     } else if (A && B && C) {
@@ -194,23 +212,74 @@ export class VanishingLine {
       this.A = (pointB.y - pointA.y)
       this.B = -(pointB.x - pointA.x)
       this.C = (pointA.y * (pointB.x - pointA.x)) - (pointA.x * (pointB.y - pointA.y))
+    } else {
+      [this.pointA, this.pointB, this.startWithA, this.endWithB] = [pointA, pointB, startWithA, endWithB]
     }
   }
 
   update() {
-    if ([this.A, this.B, this.C, this.line].all(v => v !== undefined)) {
-      let {
-        scale,
-        width
-      } = store.getters
-      let half = (width / scale) / 2
-      this.line.start = new THREE.Vector2(half, (-this.C - this.A * half) / this.B)
-      this.line.end = new THREE.Vector2(-half, (-this.C + this.A * half) / this.B)
+    let {start, end} = this.calculateWhereToShow()
+    if (start && end && this.line) {
+      this.line.start = start.toPaperPoint()
+      this.line.end = end.toPaperPoint()
+    }
+  }
+
+  calculateWhereToShow() {
+    let [pointAtTop, pointAtBottom] = [this.at({
+      y: store.getters.height / 2
+    }), this.at({
+      y: -store.getters.height / 2
+    })]
+
+    let {
+      pointA: start,
+      pointB: end
+    } = this
+    if (!this.startWithA && !this.startWithB) {
+      start = pointAtTop
+      end = pointAtBottom
+    } else if (this.startWithA && !this.startWithB) {
+      end = this.controllB.closerPoint([pointAtTop, pointAtBottom])
+    }
+
+    return {
+      start,
+      end
+    }
+  }
+
+  intersection(line) {
+    // this.
+  }
+
+  calcX(y) {
+    return (-this.B * y - this.C) / this.A
+  }
+
+  calcY(x) {
+    return (-this.A * x - this.C) / this.B
+  }
+
+  at({
+    x,
+    y
+  }) {
+    if (x) {
+      return VanishingPoint({
+        x,
+        y: this.calcY(x)
+      })
+    } else if (y) {
+      return VanishingPoint({
+        x: this.calcX(y),
+        y
+      })
     }
   }
 }
 
-export class Line {
+export class LineObject {
   color;
   _start;
   _end;
@@ -292,9 +361,8 @@ export class LogicLine extends Line {
       this.obj.geometry.attributes.position.needsUpdate = true;
     }
   }
-
-
 }
+
 // 传入射线起始点、要经过的视图上的点，返回要经过整个视图的射线
 export class RayLine extends LogicLine {
   constructor(start, over, color = 0x0) {
