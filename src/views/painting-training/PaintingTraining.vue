@@ -45,7 +45,7 @@
             >
           </v-col>
           <v-col cols="2">
-            <v-btn block outlined color="primary">显示答案 (SPACE)</v-btn>
+            <v-btn block outlined color="primary" @click="$refs.view.$emit('show-answer')">显示答案 (SPACE)</v-btn>
           </v-col>
           <v-col cols="2">
             <v-btn block color="primary" @click="$refs.view.$emit('undo')"
@@ -53,11 +53,18 @@
             >
           </v-col>
           <v-col cols="2" offset="2">
-            <v-switch v-model="immediately" label="完成答题后显示答案"></v-switch>
+            <v-switch
+              v-model="immediately"
+              label="完成答题后显示答案"
+            ></v-switch>
           </v-col>
         </v-row>
       </v-card>
-      <router-view :immediately="immediately" ref="view"></router-view>
+      <router-view
+        :immediately="immediately"
+        ref="view"
+        v-resize="resize"
+      ></router-view>
     </v-col>
   </v-row>
 </template>
@@ -141,37 +148,79 @@ export default {
     };
   },
   created() {
-    // 初始化scene
-    if (!store.getters.scene) {
-      this.setScene(new THREE.Scene());
-    }
-    // 初始化canvas
-    if (!store.getters.renderer) {
-      this.setRenderer(
-        new THREE.WebGLRenderer({ antialias: true, alpha: true })
-      );
-    }
-
-    window.addEventListener("keydown", (event) => {
-      if (event.keyCode == 82) {
-        this.$refs.view.$emit("reset");
-      }
-
-      if (event.ctrlKey == true && event.keyCode == 90) {
-        this.$refs.view.$emit("undo");
-      }
-
-      if (event.ctrlKey == true && event.keyCode == 89) {
-        this.$refs.view.$emit("redo");
-      }
-    });
-
-    // 用来Debug
-    window.scene = store.getters.scene;
-    window.renderer = store.getters.renderer;
+    this.init();
   },
+
+  mounted() {
+    this.resize()
+    this.update();
+  },
+
   methods: {
-    ...mapActions(["setScene", "setCanvas", "setRenderer"]),
+    init() {
+      // 初始化scene
+      if (!store.getters.scene) {
+        this.setScene(new THREE.Scene());
+      }
+      // 初始化canvas
+      if (!store.getters.renderer) {
+        this.setRenderer(
+          new THREE.WebGLRenderer({ antialias: true, alpha: true })
+        );
+      }
+      store.getters.renderer.setAnimationLoop(this.update.bind(this));
+      window.store = store;
+      window.addEventListener("keydown", (event) => {
+        if (event.keyCode == 82) {
+          this.$refs.view.$emit("reset");
+        }
+
+        if (event.ctrlKey == true && event.keyCode == 90) {
+          this.$refs.view.$emit("undo");
+        }
+
+        if (event.ctrlKey == true && event.keyCode == 89) {
+          this.$refs.view.$emit("redo");
+        }
+      });
+
+      // 用来Debug
+      window.scene = store.getters.scene;
+      window.renderer = store.getters.renderer;
+    },
+
+    update(time) {
+      let { scene, renderer, size } = store.getters;
+      let view = this.$refs.view;
+      view.update(time);
+    },
+
+    resize() {
+      // console.log(111);
+      let view = this.$refs.view;
+      let [width, height] = [view.$el.offsetWidth, view.$el.offsetHeight];
+      this.setSize({ width, height });
+    },
+
+    ...mapActions(["setScene", "setCanvas", "setRenderer", "setSize"]),
+  },
+
+  directives: {
+    resize: {
+      bind(el, {value: callback}) {
+        let [width, height] = ["", ""];
+        function isReize() {
+          const style = document.defaultView.getComputedStyle(el);
+          if (width !== style.width || height !== style.height) 
+            callback({ width: style.width, height: style.height });
+          ({width, height} = style);
+        }
+        el.__vueSetInterval__ = setInterval(isReize, 300);
+      },
+      unbind(el) {
+        clearInterval(el.__vueSetInterval__);
+      },
+    },
   },
 };
 </script>

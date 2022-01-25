@@ -10,14 +10,10 @@ const store = new Vuex.Store({
       nickname: "赵浩然",
     },
     arr: ['sregsaer'],
-
-    canvasInfo: {
-      width: 0,
-      height: 0,
-    },
-    canvas: null,
+    width: 0,
+    height: 0,
     scene: null,
-    renderer: null
+    renderer: null,
   },
   mutations: {
     editNickname: function (state, newNickname) {
@@ -29,8 +25,10 @@ const store = new Vuex.Store({
     SET_CANVAS_INFO: (state, info) => {
       state.canvasInfo = info
     },
-    SET_CANVAS: (state, canvas) => {
-      state.canvas = canvas
+    SET_SIZE: (state, {width, height}) => {
+      state.renderer.setSize(width, height);
+      state.width = width
+      state.height = height
     },
     SET_SCENE: (state, scene) => {
       state.scene = scene
@@ -51,10 +49,10 @@ const store = new Vuex.Store({
     }, scene) => {
       commit("SET_SCENE", scene)
     },
-    setCanvas: ({
+    setSize: ({
       commit
-    }, canvas) => {
-      commit("SET_CANVAS", canvas)
+    }, size) => {
+      commit("SET_SIZE", size)
     },
     setRenderer: ({
       commit
@@ -68,9 +66,10 @@ const store = new Vuex.Store({
     scene: (state) => state.scene,
     canvas: (state) => state.canvas,
     renderer: (state) => state.renderer,
-    width: (state) => state.renderer.domElement.width,
-    height: (state) => state.renderer.domElement.height,
-    scale: (state) => state.renderer.domElement.height / 2,
+    width: (state) => state.width,
+    height: (state) => state.height,
+    size: ({width, height}) => ({width, height}),
+    scale: (state) => state.height / 2,
   }
 })
 

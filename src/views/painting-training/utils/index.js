@@ -214,17 +214,20 @@ export class Line {
     A,
     B,
     C,
-    color = 0x0
+    color = 0x0,
+    hidden = false,
   }) {
     [this.startWithA, this.endWithB] = [startWithA, endWithB];
     this.line = new LineObject({
-      color
+      color,
+      hidden
     })
     if (verticalPoint !== undefined) {
       this.verticalPoint = verticalPoint;
     } else if (A !== undefined && B !== undefined && C !== undefined) {
-      this.pointA = new Point((-B * (store.getters.height / 2) - C) / A, store.getters.height / 2);
-      this.pointB = new Point((B * (store.getters.height / 2) - C) / A, -store.getters.height / 2);
+      this.pointA = new Point({paperX: (-B * (store.getters.height / 2) - C) / A, paperY: store.getters.height / 2});
+      console.log(this.PointA);
+      this.pointB = new Point({paperX: (B * (store.getters.height / 2) - C) / A, paperY: -store.getters.height / 2});
     } else if (pointA !== undefined && pointB !== undefined) {
       [this.pointA, this.pointB] = [pointA, pointB];
     }
@@ -235,9 +238,10 @@ export class Line {
       start,
       end
     } = this.calculateWhereToShow()
-    if (start && end && this.line) {
+    if (this.line) {
       this.line.start = start
       this.line.end = end
+      // console.log(start, end);
     }
   }
 
@@ -264,7 +268,12 @@ export class Line {
   }
 
   intersection(line) {
-    // this.
+
+    let {A: A1, B: B1, C: C1} = this
+    let {A: A2, B: B2, C: C2} = line
+    console.log(A1, A2, B1, B2, C1, C2);
+    let x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1)
+    return this.pointByX(x)
   }
 
   pointByPaperX(paperX) {
@@ -301,6 +310,7 @@ export class LineObject {
   _start;
   _end;
   obj;
+  hidden;
 
   get start() {
     return this._start
@@ -323,7 +333,8 @@ export class LineObject {
   constructor({
     start = undefined,
     end = undefined,
-    color = 0x0
+    color = 0x0,
+    hidden = false,
   }) {
     this.color = color
     let material = new THREE.LineBasicMaterial({
@@ -333,11 +344,12 @@ export class LineObject {
     geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
     this.obj = new THREE.Line(geometry, material);
     store.getters.scene.add(this.obj);
+    this.hidden = hidden
     [this.start, this.end] = [start, end];
   }
 
   update() {
-    if (this.obj) {
+    if (this.obj && !this.hidden) {
       let array;
       if (this.start && this.end) {
         array = new Float32Array([

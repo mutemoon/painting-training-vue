@@ -1,9 +1,12 @@
 <template>
-  <v-card
-    class="canvas_container"
-    @mousedown="handleDown"
-    @mousemove="handleMove"
-  ></v-card>
+  <transition name="slide-fade">
+    <v-card
+      class="canvas_container"
+      @mousedown="handleDown"
+      @mousemove="handleMove"
+      @="console.log(1111)"
+    ></v-card>
+  </transition>
 </template>
 
 <script>
@@ -33,34 +36,28 @@ export default {
 
   mounted() {
     this.init();
+    this.$nextTick(() => {
+      this.reset();
+    });
   },
 
   methods: {
     init() {
-      this.scene = store.getters.scene;
-      this.renderer = store.getters.renderer;
-      this.renderer.setAnimationLoop(this.update.bind(this));
+      let { scene, renderer } = store.getters;
+
       document
         .querySelector(".canvas_container")
-        .appendChild(this.renderer.domElement);
-      let [width, height] = [this.$el.offsetWidth, this.$el.offsetHeight];
-
-      this.camera = new THREE.OrthographicCamera(
-        ...[width / -2, width / 2, height / 2, height / -2],
-        1,
-        1000
-      );
+        .appendChild(renderer.domElement);
+      this.camera = new THREE.OrthographicCamera(...[0, 0, 0, 0], 1, 1000);
 
       this.camera.position.set(0, 0, -1);
       this.camera.lookAt(0, 0, 0);
 
-      this.scene.add(this.camera);
-      this.renderer.setSize(width, height);
-      this.reset();
-
+      scene.add(this.camera);
       this.$on("reset", this.reset);
       this.$on("undo", this.undo);
       this.$on("redo", this.redo);
+      this.$on("show-answer", this.showAnswer);
     },
 
     reset() {
@@ -74,24 +71,23 @@ export default {
       this.lineA = new utils.Line({
         pointA: this.pointA,
         pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true
+        startWithA: true,
       });
       this.lineB = new utils.Line({
         pointA: this.pointA,
         pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true
+        startWithA: true,
       });
 
-      for (let i = 0; i < 100; i++) {
-        new utils.Line({pointA: utils.Point.randomWithConstraint(45), pointB: utils.Point.randomWithConstraint(45), startWithA: true, endWithB: true, color: 0xff00ff})
-      }
-      this.lineC = new utils.Line({startWithA: true, endWithB: true})
-      this.lineD = new utils.Line({startWithA: true, endWithB: true});
+      // for (let i = 0; i < 100; i++) {
+      //   new utils.Line({pointA: utils.Point.randomWithConstraint(45), pointB: utils.Point.randomWithConstraint(45), startWithA: true, endWithB: true, color: 0xff00ff})
+      // }
+      this.lineC = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineD = new utils.Line({ startWithA: true, endWithB: true });
     },
 
     update(time) {
-      let [width, height] = [this.$el.offsetWidth, this.$el.offsetHeight];
-      this.renderer.setSize(width, height);
+      let { width, height, scene, renderer } = store.getters;
       [
         this.camera.left,
         this.camera.right,
@@ -99,7 +95,7 @@ export default {
         this.camera.bottom,
       ] = [width / 2, -width / 2, height / 2, height / -2];
       this.camera.updateProjectionMatrix();
-      this.renderer.render(this.scene, this.camera);
+      renderer.render(scene, this.camera);
     },
 
     destroy() {
@@ -117,7 +113,7 @@ export default {
     handleDown({ offsetX, offsetY }) {
       let point = new utils.Point({
         paperX: offsetX - store.getters.width / 2,
-        paperY: -offsetY + store.getters.height / 2
+        paperY: -offsetY + store.getters.height / 2,
       });
 
       switch (this.state) {
@@ -143,7 +139,7 @@ export default {
     handleMove({ offsetX, offsetY }) {
       let point = new utils.Point({
         paperX: offsetX - store.getters.width / 2,
-        paperY: -offsetY + store.getters.height / 2
+        paperY: -offsetY + store.getters.height / 2,
       });
 
       switch (this.state) {
@@ -158,12 +154,11 @@ export default {
 
     showAnswer() {
       if (this.state == STATE.done) {
-        let remotePoint = this.pointA.distanceTo(this.lineD.start) > this.pointA.distanceTo(this.lineD.end) ? this.lineD.end : this.lineD.start
-        this.lineC.toLogic()
-        this.remotePoint
-        new utils.VanishingLine({pointA: this.lineCStart, pointB: this.lineCEnd})
-
-        this.lineAnswer = this.pointA.perpendicularLine()
+        let intersection = this.lineC.intersection(this.pointA.perpendicularLine())
+        let remotePoint = intersection.fartherPoint(this.lineD.start, this.lineDEnd)
+        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint});
+        window.lineAnswer = this.lineAnswer
+        console.log(intersection,this.lineAnswer);
       }
     },
 
@@ -214,7 +209,7 @@ export default {
       if (newState === STATE.done && this.immediately) {
         this.showAnswer();
       }
-    }
+    },
   },
 };
 </script>
