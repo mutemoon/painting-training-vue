@@ -15,11 +15,6 @@ export function random_logic_point() {
   return new THREE.Vector2(Math.tan(angle_x), Math.tan(angle_y));
 }
 
-// 根据逻辑上消失点生成垂直于该点的逻辑上消失线
-export function perpendicular_logic_point(point) {
-
-  // return new VanishingPoint()
-}
 
 export function random_constraint_logic_point(constraint) {
   let angle_x = (Math.random() - 0.5) * (constraint / 90) * Math.PI;
@@ -96,11 +91,12 @@ export class Point extends THREE.Vector2 {
     }
   }
 
-  perpendicularLine() {
+  perpendicularLine(hidden=true) {
     return new Line({
-      A: this.x,
-      B: this.y,
-      C: 1
+      A: this.paperX,
+      B: this.paperY,
+      C: store.getters.scale ** 2,
+      hidden
     })
   }
 
@@ -151,15 +147,15 @@ export class Line {
   line;
 
   get A() {
-    return this.pointA.y - this.pointB.y
+    return this.pointB.paperY - this.pointA.paperY
   }
 
   get B() {
-    return this.pointA.x - this.pointB.x
+    return this.pointA.paperX - this.pointB.paperX
   }
 
   get C() {
-    return (this.pointA.y * (this.pointB.x - this.pointA.x)) - (this.pointA.x * (this.pointB.y - this.pointA.y))
+    return (this.pointA.paperY * (this.pointB.paperX - this.pointA.paperX)) - (this.pointA.paperX * (this.pointB.paperY - this.pointA.paperY))
   }
 
   get verticalPoint() {
@@ -169,8 +165,8 @@ export class Line {
       C
     } = this
     return new Point({
-      x: -(A * C) / (A * A + B * B),
-      y: -(B * C) / (A * A + B * B)
+      paperX: -(A * C) / (A * A + B * B),
+      paperY: -(B * C) / (A * A + B * B)
     })
   }
 
@@ -226,8 +222,7 @@ export class Line {
       this.verticalPoint = verticalPoint;
     } else if (A !== undefined && B !== undefined && C !== undefined) {
       this.pointA = new Point({paperX: (-B * (store.getters.height / 2) - C) / A, paperY: store.getters.height / 2});
-      console.log(this.PointA);
-      this.pointB = new Point({paperX: (B * (store.getters.height / 2) - C) / A, paperY: -store.getters.height / 2});
+      this.pointB = new Point({paperX: (-B * (-store.getters.height / 2) - C) / A, paperY: -store.getters.height / 2});
     } else if (pointA !== undefined && pointB !== undefined) {
       [this.pointA, this.pointB] = [pointA, pointB];
     }
@@ -268,12 +263,11 @@ export class Line {
   }
 
   intersection(line) {
-
     let {A: A1, B: B1, C: C1} = this
     let {A: A2, B: B2, C: C2} = line
     console.log(A1, A2, B1, B2, C1, C2);
     let x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1)
-    return this.pointByX(x)
+    return this.pointByPaperX(x)
   }
 
   pointByPaperX(paperX) {
@@ -344,7 +338,7 @@ export class LineObject {
     geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
     this.obj = new THREE.Line(geometry, material);
     store.getters.scene.add(this.obj);
-    this.hidden = hidden
+    this.hidden = hidden;
     [this.start, this.end] = [start, end];
   }
 
@@ -370,7 +364,9 @@ export class LineObject {
     return new LogicLine(this.start.toLogicPoint(), this.end.toLogicPoint(), this.color)
   }
 }
-
+window.Point = Point
+window.Line = Line
+window.LineObject = LineObject
 export class LogicLine extends LineObject {
   constructor(...arg) {
     super(...arg)
