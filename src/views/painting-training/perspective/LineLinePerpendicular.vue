@@ -13,6 +13,7 @@
 const THREE = require("three");
 import store from "@/store";
 import * as utils from "../utils";
+import colors from 'vuetify/lib/util/colors'
 
 const STATE = {
   waitC: Symbol("waitC"),
@@ -115,7 +116,9 @@ export default {
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2,
       });
+      console.log(offsetX, offsetY);
 
+      console.log(point);
       switch (this.state) {
         case STATE.waitC:
           this.lineC.pointA = point;
@@ -141,7 +144,6 @@ export default {
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2,
       });
-
       switch (this.state) {
         case STATE.drawingC:
           this.lineC.pointB = point;
@@ -154,11 +156,11 @@ export default {
 
     showAnswer() {
       if (this.state == STATE.done) {
-        let intersection = this.lineC.intersection(this.pointA.perpendicularLine())
-        let remotePoint = intersection.fartherPoint(this.lineD.start, this.lineDEnd)
-        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint});
-        window.lineAnswer = this.lineAnswer
-        console.log(intersection,this.lineAnswer);
+        let intersection = this.lineC.intersection(this.pointA.perpendicularLine(false))
+        let remotePoint = intersection.fartherPoint(this.lineD.pointA, this.lineD.pointB)
+        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint, startWithA: true, color: 0x9c27b0});
+        // this.lineAnswer = new utils.Line({pointA: this.pointA, pointB: this.pointA.perpendicularPoint(), startWithA: true, endWithB: true});
+        console.log(colors.purple, remotePoint, this.lineAnswer);
       }
     },
 
