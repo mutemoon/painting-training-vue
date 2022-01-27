@@ -1,7 +1,8 @@
 const THREE = require("three");
 import store from "@/store";
+import Line from "./Line"
 
-export class Point extends THREE.Vector2 {
+export default class Point extends THREE.Vector2 {
     angleX;
     angleY;
   
@@ -60,11 +61,13 @@ export class Point extends THREE.Vector2 {
       }
     }
   
-    perpendicularLine() {
+    perpendicularLine(color=0x0, hidden=true) {
       return new Line({
         A: this.x,
         B: this.y,
-        C: 1
+        C: 1,
+        color,
+        hidden,
       })
     }
   

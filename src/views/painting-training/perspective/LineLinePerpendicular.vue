@@ -13,7 +13,6 @@
 const THREE = require("three");
 import store from "@/store";
 import * as utils from "../utils";
-import colors from 'vuetify/lib/util/colors'
 
 const STATE = {
   waitC: Symbol("waitC"),
@@ -73,11 +72,13 @@ export default {
         pointA: this.pointA,
         pointB: utils.Point.randomWithConstraint(45),
         startWithA: true,
+        color: utils.Color.question1,
       });
       this.lineB = new utils.Line({
         pointA: this.pointA,
         pointB: utils.Point.randomWithConstraint(45),
         startWithA: true,
+        color: utils.Color.question1,
       });
 
       // for (let i = 0; i < 100; i++) {
@@ -116,9 +117,7 @@ export default {
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2,
       });
-      console.log(offsetX, offsetY);
 
-      console.log(point);
       switch (this.state) {
         case STATE.waitC:
           this.lineC.pointA = point;
@@ -156,11 +155,10 @@ export default {
 
     showAnswer() {
       if (this.state == STATE.done) {
-        let intersection = this.lineC.intersection(this.pointA.perpendicularLine(false))
+        let intersection = this.lineC.intersection(this.pointA.perpendicularLine(utils.Color.answer1, false))
         let remotePoint = intersection.fartherPoint(this.lineD.pointA, this.lineD.pointB)
-        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint, startWithA: true, color: 0x9c27b0});
-        // this.lineAnswer = new utils.Line({pointA: this.pointA, pointB: this.pointA.perpendicularPoint(), startWithA: true, endWithB: true});
-        console.log(colors.purple, remotePoint, this.lineAnswer);
+        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint, startWithA: true, color: utils.Color.answer1});
+        new utils.Line({pointA: this.pointA, pointB: this.pointA.perpendicularPoint(), startWithA: true, endWithB: true, color: utils.Color.answer3});
       }
     },
 
@@ -168,6 +166,7 @@ export default {
       switch (this.state) {
         case STATE.drawingC:
           this.lineC.pointA = null;
+          this.lineC.pointB = null;
           this.state = STATE.waitC;
           break;
         case STATE.waitD:
@@ -176,6 +175,7 @@ export default {
           break;
         case STATE.drawingD:
           this.lineD.pointA = null;
+          this.lineD.pointB = null;
           this.state = STATE.waitD;
           break;
         case STATE.done:
