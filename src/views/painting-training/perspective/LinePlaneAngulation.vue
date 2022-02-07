@@ -14,10 +14,8 @@ import store from "@/store";
 import * as utils from "../utils";
 
 const STATE = {
-  waitC: Symbol("waitC"),
-  drawingC: Symbol("drawingC"),
-  waitD: Symbol("waitD"),
-  drawingD: Symbol("drawingD"),
+  drawingA: Symbol("drawingA"),
+  drawingB: Symbol("drawingB"),
   done: Symbol("done"),
   showAnswer: Symbol("showAnswer"),
 };
@@ -63,45 +61,64 @@ export default {
 
     reset() {
       this.$emit("beforeReset");
-      this.state = STATE.waitC;
+      this.state = STATE.drawingA;
 
-      this.lineC?.destroy();
-      this.lineD?.destroy();
-      this.clearAnswer()
+      this.lineA?.destroy();
+      this.lineB?.destroy();
+      this.clearAnswer();
 
-      this.lineC = new utils.Line({ startWithA: true, endWithB: true });
-      this.lineD = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineA = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineB = new utils.Line({ startWithA: true, endWithB: true });
+
+      this.lineA.pointA = this.plane.path[0];
+      this.lineB.pointA = this.plane.path[1];
     },
 
     next() {
       this.$emit("beforeNext");
       this.destroy();
-      this.state = STATE.waitC;
+      this.state = STATE.drawingA;
       this.auxCircle = new utils.Circle({
         centre: new utils.Point({ x: 0, y: 0 }),
         r: 1,
       });
       this.auxCenter = new utils.Point({ x: 0, y: 0, hidden: false });
 
-      // 随机一个消失点
+      // 随机两个垂直的消失点
       this.pointA = utils.Point.random();
+      this.pointB = this.pointA.perpendicularLine().randomPoint();
 
-      // 随机两条线
+      this.planeVanishingLine = new utils.Line({
+        pointA: this.pointA,
+        pointB: this.pointB,
+        startWithA: true,
+        endWithB: true,
+      });
+
+      this.plane = utils.Plane.randomPlaneInView(this.pointA, this.pointB);
+
+      this.answerVp = this.pointA.perpendicularLine().angulationPointToPointInLine(this.pointB, this.planeVanishingLine.perpendicularPoint(), Math.random() * 90);
+
       this.lineA = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
+        pointA: this.plane.path[0],
+        pointB: this.plane.path[1],
         startWithA: true,
-        color: utils.Color.question1,
-      });
-      this.lineB = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true,
-        color: utils.Color.question1,
+        endWithB: true,
+        color: 0xff0000,
       });
 
-      this.lineC = new utils.Line({ startWithA: true, endWithB: true });
-      this.lineD = new utils.Line({ startWithA: true, endWithB: true });
+      // this.line1 = new utils.Line({
+      //   pointA: this.plane.path[0],
+      //   pointB: this.plane.path[1],
+      //   startWithA: true,
+      //   endWithB: true,
+      // });
+
+      this.lineA = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineB = new utils.Line({ startWithA: true, endWithB: true });
+
+      this.lineA.pointA = this.plane.path[0];
+      this.lineB.pointA = this.plane.path[1];
     },
 
     update(time) {
@@ -135,20 +152,12 @@ export default {
       });
 
       switch (this.state) {
-        case STATE.waitC:
-          this.lineC.pointA = point;
-          this.state = STATE.drawingC;
+        case STATE.drawingA:
+          this.lineA.pointB = point;
+          this.state = STATE.drawingB;
           break;
-        case STATE.drawingC:
-          this.lineC.pointB = point;
-          this.state = STATE.waitD;
-          break;
-        case STATE.waitD:
-          this.lineD.pointA = point;
-          this.state = STATE.drawingD;
-          break;
-        case STATE.drawingD:
-          this.lineD.pointB = point;
+        case STATE.drawingB:
+          this.lineB.pointB = point;
           this.state = STATE.done;
           break;
       }
@@ -160,44 +169,37 @@ export default {
         paperY: -offsetY + store.getters.height / 2,
       });
       switch (this.state) {
-        case STATE.drawingC:
-          this.lineC.pointB = point;
+        case STATE.drawingA:
+          this.lineA.pointB = point;
           break;
-        case STATE.drawingD:
-          this.lineD.pointB = point;
+        case STATE.drawingB:
+          this.lineB.pointB = point;
           break;
       }
     },
 
     clearAnswer() {
-      this.answer1?.destroy();
-      this.answer2?.destroy();
-      this.answer3?.destroy();
+      this.answerLineA?.destroy();
+      this.answerLineB?.destroy();
+      this.answerVp?.destroy();
     },
 
     showAnswer() {
       if (this.state == STATE.done) {
-        this.answer1 = this.pointA.perpendicularLine();
-        this.answer1.color = utils.Color.answer2
-        this.answer1.hidden = false
-        let intersection = this.lineC.intersection(this.answer1);
-        let remotePoint = intersection.fartherPoint(
-          this.lineD.pointA,
-          this.lineD.pointB
-        );
-        this.answer2 = new utils.Line({
-          pointA: intersection,
-          pointB: remotePoint,
+        this.answerLineA = new utils.Line({
+          pointA: this.answerVp,
+          pointB: this.lineA.pointA,
           startWithA: true,
           color: utils.Color.answer1,
         });
-        this.answer3 = new utils.Line({
-          pointA: this.pointA,
-          pointB: this.pointA.perpendicularPoint(),
+
+        this.answerLineB = new utils.Line({
+          pointA: this.answerVp,
+          pointB: this.lineB.pointA,
           startWithA: true,
-          endWithB: true,
-          color: utils.Color.answer3,
+          color: utils.Color.answer1,
         });
+
         this.state = STATE.showAnswer;
         this.$emit("score", this.score());
       }
@@ -206,7 +208,9 @@ export default {
     score() {
       return (
         100 *
-        (Math.max(45 - this.lineD.inclinationToLine(this.answer2), 0) / 45)
+          (Math.max(45 - this.lineA.inclinationToLine(this.answerLineA), 0) / 90) +
+        100 *
+          (Math.max(45 - this.lineB.inclinationToLine(this.answerLineB), 0) / 90)
       ).toFixed(2);
     },
 

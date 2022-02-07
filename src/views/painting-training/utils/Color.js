@@ -1,6 +1,6 @@
 
 function calc(base, step) {
-    return base + ((step - 1) * 0x202020)
+    return base + ((step) * 0x302010)
 }
 
 export default {

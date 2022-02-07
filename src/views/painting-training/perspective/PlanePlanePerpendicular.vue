@@ -14,9 +14,9 @@ import store from "@/store";
 import * as utils from "../utils";
 
 const STATE = {
-  waitC: Symbol("waitC"),
+  waitA: Symbol("waitA"),
+  drawingB: Symbol("drawingB"),
   drawingC: Symbol("drawingC"),
-  waitD: Symbol("waitD"),
   drawingD: Symbol("drawingD"),
   done: Symbol("done"),
   showAnswer: Symbol("showAnswer"),
@@ -28,7 +28,7 @@ export default {
       scene: null,
       renderer: null,
       camera: null,
-      state: STATE.waitC,
+      state: STATE.waitA,
     };
   },
 
@@ -63,12 +63,16 @@ export default {
 
     reset() {
       this.$emit("beforeReset");
-      this.state = STATE.waitC;
+      this.state = STATE.waitA;
 
+      this.lineA?.destroy();
+      this.lineB?.destroy();
       this.lineC?.destroy();
       this.lineD?.destroy();
-      this.clearAnswer()
+      this.clearAnswer();
 
+      this.lineA = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineB = new utils.Line({ startWithA: true, endWithB: true });
       this.lineC = new utils.Line({ startWithA: true, endWithB: true });
       this.lineD = new utils.Line({ startWithA: true, endWithB: true });
     },
@@ -76,30 +80,27 @@ export default {
     next() {
       this.$emit("beforeNext");
       this.destroy();
-      this.state = STATE.waitC;
+      this.state = STATE.waitA;
       this.auxCircle = new utils.Circle({
         centre: new utils.Point({ x: 0, y: 0 }),
         r: 1,
       });
       this.auxCenter = new utils.Point({ x: 0, y: 0, hidden: false });
 
-      // 随机一个消失点
+      // 随机两个垂直的消失点
       this.pointA = utils.Point.random();
+      this.pointB = this.pointA.perpendicularLine().randomPoint();
 
-      // 随机两条线
-      this.lineA = new utils.Line({
+      new utils.Line({
         pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
+        pointB: this.pointB,
         startWithA: true,
-        color: utils.Color.question1,
+        endWithB: true,
       });
-      this.lineB = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true,
-        color: utils.Color.question1,
-      });
+      this.plane = utils.Plane.randomPlaneInView(this.pointA, this.pointB);
 
+      this.lineA = new utils.Line({ startWithA: true, endWithB: true });
+      this.lineB = new utils.Line({ startWithA: true, endWithB: true });
       this.lineC = new utils.Line({ startWithA: true, endWithB: true });
       this.lineD = new utils.Line({ startWithA: true, endWithB: true });
     },
@@ -135,20 +136,24 @@ export default {
       });
 
       switch (this.state) {
-        case STATE.waitC:
-          this.lineC.pointA = point;
+        case STATE.waitA:
+          this.lineA.pointA = point;
+          this.state = STATE.drawingB;
+          break;
+        case STATE.drawingB:
+          this.lineA.pointB = point;
+          this.lineB.pointA = point;
           this.state = STATE.drawingC;
           break;
         case STATE.drawingC:
-          this.lineC.pointB = point;
-          this.state = STATE.waitD;
-          break;
-        case STATE.waitD:
-          this.lineD.pointA = point;
+          this.lineB.pointB = point;
+          this.lineC.pointA = point;
           this.state = STATE.drawingD;
           break;
         case STATE.drawingD:
-          this.lineD.pointB = point;
+          this.lineC.pointB = point;
+          this.lineD.pointA = point;
+          this.lineD.pointB = this.lineA.pointA;
           this.state = STATE.done;
           break;
       }
@@ -159,44 +164,67 @@ export default {
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2,
       });
+
       switch (this.state) {
+        case STATE.drawingB:
+          this.lineA.pointB = point;
+          break;
         case STATE.drawingC:
-          this.lineC.pointB = point;
+          this.lineB.pointB = point;
           break;
         case STATE.drawingD:
-          this.lineD.pointB = point;
+          this.lineC.pointB = point;
           break;
       }
     },
 
     clearAnswer() {
-      this.answer1?.destroy();
-      this.answer2?.destroy();
-      this.answer3?.destroy();
+      this.answerVpA?.destroy();
+      this.answerVpB?.destroy();
+      this.answerLine1?.destroy();
+      this.answerLine2?.destroy();
+      this.answerLine3?.destroy();
+      this.answerLine4?.destroy();
+      this.answerPlane?.destroy();
     },
 
     showAnswer() {
       if (this.state == STATE.done) {
-        this.answer1 = this.pointA.perpendicularLine();
-        this.answer1.color = utils.Color.answer2
-        this.answer1.hidden = false
-        let intersection = this.lineC.intersection(this.answer1);
-        let remotePoint = intersection.fartherPoint(
-          this.lineD.pointA,
-          this.lineD.pointB
-        );
-        this.answer2 = new utils.Line({
-          pointA: intersection,
-          pointB: remotePoint,
+        this.answerLine1 = this.plane.perpendicularLine();
+        this.answerLine1.hidden = false;
+        this.answerVpA = this.lineA.intersection(this.answerLine1);
+        this.answerVpB = this.answerVpA
+          .perpendicularLine()
+          .intersection(this.answerLine1);
+        this.answerLine2 = new utils.Line({
+          pointA: this.answerVpA,
+          pointB: this.answerVpB,
           startWithA: true,
-          color: utils.Color.answer1,
+          endWithB: true,
+          color: utils.Color.answer2,
         });
-        this.answer3 = new utils.Line({
-          pointA: this.pointA,
-          pointB: this.pointA.perpendicularPoint(),
+
+        this.answerLine3 = new utils.Line({
+          pointA: this.answerVpA,
+          pointB: this.lineB.pointA,
           startWithA: true,
           endWithB: true,
           color: utils.Color.answer3,
+        });
+        this.answerLine4 = new utils.Line({
+          pointA: this.answerVpB,
+          pointB: this.lineD.pointA,
+          startWithA: true,
+          endWithB: true,
+          color: utils.Color.answer3,
+        });
+
+        this.answerPlane = new utils.Plane({
+          vpA: this.answerVpA,
+          vpB: this.answerVpB,
+          controllA: this.lineB.pointA,
+          controllB: this.lineD.pointA,
+          color: utils.Color.answer1,
         });
         this.state = STATE.showAnswer;
         this.$emit("score", this.score());
@@ -206,31 +234,44 @@ export default {
     score() {
       return (
         100 *
-        (Math.max(45 - this.lineD.inclinationToLine(this.answer2), 0) / 45)
+          (Math.max(45 - this.lineC.inclinationToLine(this.answer2), 0) / 90) +
+        100 *
+          (Math.max(45 - this.lineD.inclinationToLine(this.answer3), 0) / 90)
       ).toFixed(2);
     },
 
     undo() {
       switch (this.state) {
-        case STATE.drawingC:
-          this.lineC.pointA = null;
-          this.lineC.pointB = null;
-          this.state = STATE.waitC;
+        case STATE.drawingB:
+          this.lineA.pointA = null;
+          this.lineA.pointB = null;
+          this.lineB.pointA = null;
+          this.state = STATE.waitA;
           break;
-        case STATE.waitD:
-          this.lineC.pointB = null;
-          this.state = STATE.drawingC;
+        case STATE.drawingC:
+          this.lineA.pointB = null;
+          this.lineB.pointA = null;
+          this.lineB.pointB = null;
+          this.lineC.pointA = null;
+          this.state = STATE.drawingB;
           break;
         case STATE.drawingD:
+          this.lineB.pointB = null;
+          this.lineC.pointA = null;
+          this.lineC.pointB = null;
           this.lineD.pointA = null;
-          this.lineD.pointB = null;
-          this.state = STATE.waitD;
+          this.state = STATE.drawingC;
           break;
         case STATE.done:
+          this.lineC.pointB = null;
+          this.lineD.pointA = null;
           this.lineD.pointB = null;
           this.state = STATE.drawingD;
           break;
         case STATE.showAnswer:
+          this.lineC.pointB = null;
+          this.lineD.pointA = null;
+          this.lineD.pointB = null;
           this.clearAnswer();
           this.state = STATE.drawingD;
           break;

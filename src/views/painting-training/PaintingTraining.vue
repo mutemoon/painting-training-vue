@@ -20,7 +20,11 @@
               </v-list-item-content>
             </template>
 
-            <v-list-item v-for="{ title } of child.children" :key="title" link>
+            <v-list-item
+              v-for="{ title, to } of child.children"
+              :key="title"
+              :to="to"
+            >
               <v-list-item-title>
                 {{ title }}
               </v-list-item-title>
@@ -29,11 +33,17 @@
         </v-list-group>
       </v-list>
     </v-col>
-    <v-col cols="10">
+    <v-col cols="10" style="height: 100%">
       <v-card class="mb-3 pb-3 px-3">
         <v-row align="center">
           <v-col cols="2">
-            <v-btn block outlined color="primary">下一个 (G)</v-btn>
+            <v-btn
+              block
+              outlined
+              color="primary"
+              @click="$refs.view.$emit('next')"
+              >下一个 (G)</v-btn
+            >
           </v-col>
           <v-col cols="2">
             <v-btn
@@ -45,14 +55,21 @@
             >
           </v-col>
           <v-col cols="2">
-            <v-btn block outlined color="primary" @click="$refs.view.$emit('show-answer')">显示答案 (SPACE)</v-btn>
+            <v-btn
+              block
+              outlined
+              color="primary"
+              @click="$refs.view.$emit('show-answer')"
+              >显示答案 (SPACE)</v-btn
+            >
           </v-col>
           <v-col cols="2">
             <v-btn block color="primary" @click="$refs.view.$emit('undo')"
               >撤销 (CTRL+Z)</v-btn
             >
           </v-col>
-          <v-col cols="2" offset="2">
+          <v-col cols="2" offset=""> 本次分数为{{ score }} </v-col>
+          <v-col cols="2" offset="">
             <v-switch
               v-model="immediately"
               label="完成答题后显示答案"
@@ -64,6 +81,9 @@
         :immediately="immediately"
         ref="view"
         v-resize="resize"
+        @score="handleScore"
+        @beforeReset="beforeReset"
+        @beforeNext="beforeNext"
       ></router-view>
     </v-col>
   </v-row>
@@ -90,33 +110,76 @@ export default {
             {
               title: "平行训练",
               children: [
-                { title: "线线平行", icon: "mdi-account-multiple-outline" },
-                { title: "线面平行", icon: "mdi-account-multiple-outline" },
-                { title: "面面平行", icon: "mdi-account-multiple-outline" },
+                {
+                  title: "线线平行",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-line-parallel",
+                },
+                {
+                  title: "线面平行",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-plane-parallel",
+                },
+                {
+                  title: "面面平行",
+                  icon: "mdi-account-multiple-outline",
+                  to: "plane-plane-parallel",
+                },
               ],
             },
             {
               title: "垂直训练",
               children: [
-                { title: "线线垂直", icon: "mdi-account-multiple-outline" },
-                { title: "线面垂直", icon: "mdi-account-multiple-outline" },
-                { title: "面面垂直", icon: "mdi-account-multiple-outline" },
+                {
+                  title: "线线垂直",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-line-perpendicular",
+                },
+                {
+                  title: "线面垂直",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-plane-perpendicular",
+                },
+                {
+                  title: "面面垂直",
+                  icon: "mdi-account-multiple-outline",
+                  to: "plane-plane-perpendicular",
+                },
               ],
             },
             {
               title: "成角训练",
               children: [
-                { title: "线线成角", icon: "mdi-account-multiple-outline" },
-                { title: "线面成角", icon: "mdi-account-multiple-outline" },
-                { title: "面面成角", icon: "mdi-account-multiple-outline" },
+                {
+                  title: "线线成角",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-line-angulation",
+                },
+                {
+                  title: "线面成角",
+                  icon: "mdi-account-multiple-outline",
+                  to: "line-plane-angulation",
+                },
+                {
+                  title: "面面成角",
+                  icon: "mdi-account-multiple-outline",
+                  to: "plane-plane-angulation",
+                },
               ],
             },
             {
               title: "成比训练",
               children: [
-                { title: "线线成角", icon: "mdi-account-multiple-outline" },
-                { title: "线面成角", icon: "mdi-account-multiple-outline" },
-                { title: "面面成角", icon: "mdi-account-multiple-outline" },
+                {
+                  title: "同向线段成比",
+                  icon: "mdi-account-multiple-outline",
+                  to: "same-direction-proportion",
+                },
+                {
+                  title: "异向线段成比",
+                  icon: "mdi-account-multiple-outline",
+                  to: "different-direction-proportion",
+                },
               ],
             },
             {
@@ -145,6 +208,7 @@ export default {
       user: {
         uid: 1,
       },
+      score: 0,
     };
   },
   created() {
@@ -152,7 +216,7 @@ export default {
   },
 
   mounted() {
-    this.resize()
+    this.resize();
     this.update();
   },
 
@@ -171,8 +235,17 @@ export default {
       store.getters.renderer.setAnimationLoop(this.update.bind(this));
       window.store = store;
       window.addEventListener("keydown", (event) => {
+        console.log(event.keyCode);
+        if (event.keyCode == 71) {
+          this.$refs.view.$emit("next");
+        }
+
         if (event.keyCode == 82) {
           this.$refs.view.$emit("reset");
+        }
+
+        if (event.keyCode == 32) {
+          this.$refs.view.$emit("show-answer");
         }
 
         if (event.ctrlKey == true && event.keyCode == 90) {
@@ -196,10 +269,22 @@ export default {
     },
 
     resize() {
-      // console.log(111);
       let view = this.$refs.view;
       let [width, height] = [view.$el.offsetWidth, view.$el.offsetHeight];
+      store.getters.scene.children.forEach((v) => v?.source?.update());
       this.setSize({ width, height });
+    },
+
+    beforeReset() {
+      this.score = "";
+    },
+
+    beforeNext() {
+      this.score = "";
+    },
+
+    handleScore(score) {
+      this.score = score;
     },
 
     ...mapActions(["setScene", "setCanvas", "setRenderer", "setSize"]),
@@ -207,13 +292,13 @@ export default {
 
   directives: {
     resize: {
-      bind(el, {value: callback}) {
+      bind(el, { value: callback }) {
         let [width, height] = ["", ""];
         function isReize() {
           const style = document.defaultView.getComputedStyle(el);
-          if (width !== style.width || height !== style.height) 
+          if (width !== style.width || height !== style.height)
             callback({ width: style.width, height: style.height });
-          ({width, height} = style);
+          ({ width, height } = style);
         }
         el.__vueSetInterval__ = setInterval(isReize, 300);
       },

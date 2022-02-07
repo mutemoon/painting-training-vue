@@ -69,7 +69,7 @@ const store = new Vuex.Store({
     width: (state) => state.width,
     height: (state) => state.height,
     size: ({width, height}) => ({width, height}),
-    scale: (state) => state.height / 4,
+    scale: (state) => state.height / 1,
     top: (state, getters) => state.height / 2 / getters.scale,
     bottom: (state, getters) => -state.height / 2 / getters.scale,
   }

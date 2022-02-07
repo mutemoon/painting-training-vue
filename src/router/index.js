@@ -8,8 +8,22 @@ const CalcDamage = () => import('../views/calculator/CalcDamage')
 const User = () => import('../components/User')
 const Unknow = () => import('../components/Unknow')
 const Vocabulary = () => import('../components/vocabulary/Vocabulary')
+
 const LineLineParallel = () => import('../views/painting-training/perspective/LineLineParallel')
 const LineLinePerpendicular = () => import('../views/painting-training/perspective/LineLinePerpendicular')
+const LineLineAngulation = () => import('../views/painting-training/perspective/LineLineAngulation')
+
+const LinePlaneParallel = () => import('../views/painting-training/perspective/LinePlaneParallel')
+const LinePlanePerpendicular = () => import('../views/painting-training/perspective/LinePlanePerpendicular')
+const LinePlaneAngulation = () => import('../views/painting-training/perspective/LinePlaneAngulation')
+
+const PlanePlaneParallel = () => import('../views/painting-training/perspective/PlanePlaneParallel')
+const PlanePlanePerpendicular = () => import('../views/painting-training/perspective/PlanePlanePerpendicular')
+const PlanePlaneAngulation = () => import('../views/painting-training/perspective/PlanePlaneAngulation')
+
+const SameDirectionProportion = () => import('../views/painting-training/perspective/SameDirectionProportion')
+const DifferentDirectionProportion = () => import('../views/painting-training/perspective/DifferentDirectionProportion')
+
 const PaintingTraining = () => import('../views/painting-training/PaintingTraining')
 const Grammar = () => import('../views/review/Grammar')
 
@@ -87,11 +101,50 @@ const routes = [{
       },
       {
         path: 'line-line-parallel',
-        component: LineLineParallel
+        component: LineLineParallel,
       },
       {
         path: 'line-line-perpendicular',
-        component: LineLinePerpendicular
+        component: LineLinePerpendicular,
+      },
+      {
+        path: 'line-line-angulation',
+        component: LineLineAngulation,
+      },
+
+      {
+        path: 'line-plane-parallel',
+        component: LinePlaneParallel,
+      },
+      {
+        path: 'line-plane-perpendicular',
+        component: LinePlanePerpendicular,
+      },
+      {
+        path: 'line-plane-angulation',
+        component: LinePlaneAngulation,
+      },
+
+      {
+        path: 'plane-plane-parallel',
+        component: PlanePlaneParallel,
+      },
+      {
+        path: 'plane-plane-perpendicular',
+        component: PlanePlanePerpendicular,
+      },
+      {
+        path: 'plane-plane-angulation',
+        component: PlanePlaneAngulation,
+      },
+
+      {
+        path: 'same-direction-proportion',
+        component: SameDirectionProportion,
+      },
+      {
+        path: 'same-direction-proportion',
+        component: DifferentDirectionProportion,
       },
     ]
   },

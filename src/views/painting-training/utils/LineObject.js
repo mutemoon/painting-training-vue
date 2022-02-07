@@ -1,12 +1,12 @@
 const THREE = require("three");
+import ThreeObject from "./ThreeObject"
 
-
-export default class LineObject {
+export default class LineObject extends ThreeObject {
   color;
   _start;
   _end;
+  _hidden;
   obj;
-  hidden;
 
   get start() {
     return this._start
@@ -26,12 +26,22 @@ export default class LineObject {
     this.update()
   }
 
+  get hidden() {
+    return this._hidden
+  }
+
+  set hidden(v) {
+    this._hidden = v
+    this.update()
+  }
+
   constructor({
     start = undefined,
     end = undefined,
     color = 0x0,
     hidden = false,
   }) {
+    super()
     this.color = color
     this.hidden = hidden;
     let material = new THREE.LineBasicMaterial({
@@ -40,6 +50,7 @@ export default class LineObject {
     let geometry = new THREE.BufferGeometry();
     geometry.attributes.position = new THREE.BufferAttribute(new Float32Array(6), 3);
     this.obj = new THREE.Line(geometry, material);
+    this.obj.source = this
     store.getters.scene.add(this.obj);
     [this.start, this.end] = [start, end];
   }
@@ -59,6 +70,11 @@ export default class LineObject {
       }
       this.obj.geometry.attributes.position.array = array;
       this.obj.geometry.attributes.position.needsUpdate = true;
+
+      if (this.color) {
+        this.obj.material.color = new THREE.Color(this.color)
+        this.obj.material.needsUpdate = true
+      }
     }
   }
 }

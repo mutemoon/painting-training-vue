@@ -67,7 +67,7 @@ export default {
 
       this.lineC?.destroy();
       this.lineD?.destroy();
-      this.clearAnswer()
+      this.clearAnswer();
 
       this.lineC = new utils.Line({ startWithA: true, endWithB: true });
       this.lineD = new utils.Line({ startWithA: true, endWithB: true });
@@ -83,22 +83,17 @@ export default {
       });
       this.auxCenter = new utils.Point({ x: 0, y: 0, hidden: false });
 
-      // 随机一个消失点
+      // 随机两个垂直的消失点
       this.pointA = utils.Point.random();
+      this.pointB = this.pointA.perpendicularLine().randomPoint();
 
-      // 随机两条线
-      this.lineA = new utils.Line({
+      new utils.Line({
         pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
+        pointB: this.pointB,
         startWithA: true,
-        color: utils.Color.question1,
+        endWithB: true,
       });
-      this.lineB = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true,
-        color: utils.Color.question1,
-      });
+      this.plane = utils.Plane.randomPlaneInView(this.pointA, this.pointB);
 
       this.lineC = new utils.Line({ startWithA: true, endWithB: true });
       this.lineD = new utils.Line({ startWithA: true, endWithB: true });
@@ -170,34 +165,24 @@ export default {
     },
 
     clearAnswer() {
-      this.answer1?.destroy();
-      this.answer2?.destroy();
-      this.answer3?.destroy();
+      this.answerLine?.destroy();
+      this.answerVp?.destroy();
     },
 
     showAnswer() {
       if (this.state == STATE.done) {
-        this.answer1 = this.pointA.perpendicularLine();
-        this.answer1.color = utils.Color.answer2
-        this.answer1.hidden = false
-        let intersection = this.lineC.intersection(this.answer1);
-        let remotePoint = intersection.fartherPoint(
-          this.lineD.pointA,
-          this.lineD.pointB
-        );
-        this.answer2 = new utils.Line({
-          pointA: intersection,
-          pointB: remotePoint,
+        this.answerVp = this.lineC.intersection(this.plane.vanishingLine());
+
+        this.answerLine = new utils.Line({
+          pointA: this.answerVp,
+          pointB: this.answerVp.fartherPoint(
+            this.lineD.pointA,
+            this.lineD.pointB
+          ),
           startWithA: true,
           color: utils.Color.answer1,
         });
-        this.answer3 = new utils.Line({
-          pointA: this.pointA,
-          pointB: this.pointA.perpendicularPoint(),
-          startWithA: true,
-          endWithB: true,
-          color: utils.Color.answer3,
-        });
+
         this.state = STATE.showAnswer;
         this.$emit("score", this.score());
       }
@@ -206,7 +191,9 @@ export default {
     score() {
       return (
         100 *
-        (Math.max(45 - this.lineD.inclinationToLine(this.answer2), 0) / 45)
+          (Math.max(45 - this.lineC.inclinationToLine(this.answer2), 0) / 90) +
+        100 *
+          (Math.max(45 - this.lineD.inclinationToLine(this.answer3), 0) / 90)
       ).toFixed(2);
     },
 
