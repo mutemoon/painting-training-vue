@@ -186,4 +186,39 @@ export default class Line {
     this.line?.destroy()
     this.line = null
   }
+
+  static createOverViewRandomLineSegmentByVanishingPoint(vp) {
+    let pointA = new Point({
+      paperX: - (vp.x / Math.abs(vp.x)) * (Math.random() * store.getters.width / 2),
+      paperY: - (vp.y / Math.abs(vp.y)) * (Math.random() * store.getters.height / 2),
+    })
+    let diagonalLength = new Point({ x: store.getters.top, y: store.getters.bottom }).length()
+    let distanceToVp = pointA.distanceTo(vp)
+    let lineSegmentLength = Math.min(distanceToVp, diagonalLength)
+    let pointB = vp.clone().sub(pointA).normalize().multiplyScalar(Math.max(Math.random(), 0.3) * lineSegmentLength).add(pointA)
+    return new Line({ pointA, pointB, startWithA: true, endWithB: true })
+  }
+
+  static createOverViewRandomLineByVanishingPoint(vp) {
+    let pointB = new Point({
+      paperX: - (vp.x / Math.abs(vp.x)) * (Math.random() * store.getters.width / 2),
+      paperY: - (vp.y / Math.abs(vp.y)) * (Math.random() * store.getters.height / 2),
+    })
+    return new Line({ pointA: vp, pointB, startWithA: true })
+  }
+
+  closestPointAtLineSegment(point) {
+    let closestPoint = new Point({
+      x: ((this.B ** 2 * point.x) - (this.A * this.B * point.y) - (this.A * this.C)) / (this.A ** 2 + this.B ** 2),
+      y: ((this.A ** 2 * point.y) - (this.A * this.B * point.x) - (this.B * this.C)) / (this.A ** 2 + this.B ** 2)
+    })
+    let segmentLength = this.pointA.distanceTo(this.pointB)
+    let distanceToA = closestPoint.distanceTo(this.pointA)
+    let distanceToB = closestPoint.distanceTo(this.pointB)
+    if (distanceToA < segmentLength && distanceToB < segmentLength) {
+      return closestPoint
+    } else {
+      return distanceToA < distanceToB ? this.pointA : this.pointB
+    }
+  }
 }

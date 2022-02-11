@@ -24,6 +24,8 @@ const PlanePlaneAngulation = () => import('../views/painting-training/perspectiv
 const SameDirectionProportion = () => import('../views/painting-training/perspective/SameDirectionProportion')
 const DifferentDirectionProportion = () => import('../views/painting-training/perspective/DifferentDirectionProportion')
 
+const LightnessControll = () => import('../views/painting-training/render/LightnessControll')
+
 const PaintingTraining = () => import('../views/painting-training/PaintingTraining')
 const Grammar = () => import('../views/review/Grammar')
 
@@ -145,6 +147,10 @@ const routes = [{
       {
         path: 'same-direction-proportion',
         component: DifferentDirectionProportion,
+      },
+      {
+        path: 'lightness-controll',
+        component: LightnessControll,
       },
     ]
   },

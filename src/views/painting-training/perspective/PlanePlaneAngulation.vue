@@ -1,7 +1,7 @@
 <template>
   <transition name="slide-fade">
     <v-card
-      class="canvas_container"
+      class="canvas-container"
       @mousedown="handleDown"
       @mousemove="handleMove"
     ></v-card>
@@ -9,7 +9,7 @@
 </template>
 
 <script>
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 import store from "@/store";
 import * as utils from "../utils";
 
@@ -46,7 +46,7 @@ export default {
       let { scene, renderer } = store.getters;
 
       document
-        .querySelector(".canvas_container")
+        .querySelector(".canvas-container")
         .appendChild(renderer.domElement);
       this.camera = new THREE.OrthographicCamera(...[0, 0, 0, 0], 1, 1000);
 

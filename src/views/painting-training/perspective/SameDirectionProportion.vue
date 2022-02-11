@@ -1,7 +1,7 @@
 <template>
   <transition name="slide-fade">
     <v-card
-      class="canvas_container"
+      class="canvas-container"
       @mousedown="handleDown"
       @mousemove="handleMove"
       @="console.log(1111)"
@@ -10,16 +10,14 @@
 </template>
 
 <script>
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 import store from "@/store";
 import * as utils from "../utils";
 
 const STATE = {
-  waitC: Symbol("waitC"),
-  drawingC: Symbol("drawingC"),
-  waitD: Symbol("waitD"),
-  drawingD: Symbol("drawingD"),
+  drawingB: Symbol("drawingC"),
   done: Symbol("done"),
+  showAnswer: Symbol("showAnswer"),
 };
 
 export default {
@@ -37,7 +35,7 @@ export default {
   mounted() {
     this.init();
     this.$nextTick(() => {
-      this.reset();
+      this.next();
     });
   },
 
@@ -46,7 +44,7 @@ export default {
       let { scene, renderer } = store.getters;
 
       document
-        .querySelector(".canvas_container")
+        .querySelector(".canvas-container")
         .appendChild(renderer.domElement);
       this.camera = new THREE.OrthographicCamera(...[0, 0, 0, 0], 1, 1000);
 
@@ -54,6 +52,7 @@ export default {
       this.camera.lookAt(0, 0, 0);
 
       scene.add(this.camera);
+      this.$on("next", this.next);
       this.$on("reset", this.reset);
       this.$on("undo", this.undo);
       this.$on("redo", this.redo);
@@ -61,31 +60,34 @@ export default {
     },
 
     reset() {
+      this.$emit("beforeReset");
+      this.state = STATE.drawingB;
+
+      this.lineC?.destroy();
+      this.clearAnswer()
+
+      this.pointB = new utils.Point({hidden: false, color: 0x9c27b0, size: 5})
+      this.pointB.copy(this.lineA.pointB)
+    },
+
+    next (){
       this.destroy();
-      this.state = STATE.waitC;
+      this.state = STATE.drawingB;
 
       // 随机一个消失点
       this.pointA = utils.Point.random();
 
       // 随机两条线
-      this.lineA = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true,
-        color: utils.Color.question1,
-      });
-      this.lineB = new utils.Line({
-        pointA: this.pointA,
-        pointB: utils.Point.randomWithConstraint(45),
-        startWithA: true,
-        color: utils.Color.question1,
-      });
+      this.lineA = utils.Line.createOverViewRandomLineSegmentByVanishingPoint(this.pointA);
+      this.lineB = utils.Line.createOverViewRandomLineByVanishingPoint(this.pointA)
 
-      // for (let i = 0; i < 100; i++) {
-      //   new utils.Line({pointA: utils.Point.randomWithConstraint(45), pointB: utils.Point.randomWithConstraint(45), startWithA: true, endWithB: true, color: 0xff00ff})
-      // }
-      this.lineC = new utils.Line({ startWithA: true, endWithB: true });
-      this.lineD = new utils.Line({ startWithA: true, endWithB: true });
+      this.pointB = new utils.Point({hidden: false, color: 0x9c27b0, size: 5})
+      this.pointB.copy(this.lineA.pointB)
+    },
+
+    clearAnswer() {
+      this.pointB?.destroy()
+      this.answerPoint?.destroy()
     },
 
     update(time) {
@@ -119,22 +121,10 @@ export default {
       });
 
       switch (this.state) {
-        case STATE.waitC:
-          this.lineC.pointA = point;
-          this.state = STATE.drawingC;
-          break;
-        case STATE.drawingC:
-          this.lineC.pointB = point;
-          this.state = STATE.waitD;
-          break;
-        case STATE.waitD:
-          this.lineD.pointA = point;
-          this.state = STATE.drawingD;
-          break;
-        case STATE.drawingD:
-          this.lineD.pointB = point;
-          this.state = STATE.done;
-          break;
+        case STATE.drawingB:
+          this.pointB.copy(this.lineA.closestPointAtLineSegment(point))
+          this.state = STATE.done
+          break
       }
     },
 
@@ -143,22 +133,21 @@ export default {
         paperX: offsetX - store.getters.width / 2,
         paperY: -offsetY + store.getters.height / 2,
       });
+
       switch (this.state) {
-        case STATE.drawingC:
-          this.lineC.pointB = point;
-          break;
-        case STATE.drawingD:
-          this.lineD.pointB = point;
+        case STATE.drawingB:
+          this.pointB.copy(this.lineA.closestPointAtLineSegment(point))
           break;
       }
     },
 
     showAnswer() {
       if (this.state == STATE.done) {
-        let intersection = this.lineC.intersection(this.pointA.perpendicularLine(utils.Color.answer1, false))
-        let remotePoint = intersection.fartherPoint(this.lineD.pointA, this.lineD.pointB)
-        this.lineAnswer = new utils.Line({pointA: intersection, pointB: remotePoint, startWithA: true, color: utils.Color.answer1});
-        new utils.Line({pointA: this.pointA, pointB: this.pointA.perpendicularPoint(), startWithA: true, endWithB: true, color: utils.Color.answer3});
+        let pointADistanceToVp = this.lineA.pointA.distanceTo(this.pointA)
+        let pointBDistanceToVp = this.lineA.pointB.distanceTo(this.pointA)
+
+        this.answerPoint = new Point({color: utils.Color.answer2, size: 5, hidden:false})
+        this.answerPoint.copy(this.lineA.pointB.clone().sub(this.lineA.pointA).multiplyScalar(pointADistanceToVp / (pointADistanceToVp + pointBDistanceToVp)).add(this.lineA.pointA))
       }
     },
 

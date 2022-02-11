@@ -1,4 +1,4 @@
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 import store from "@/store";
 import Line from "./Line"
 import PointObject from "./PointObject";
@@ -90,6 +90,8 @@ export default class Point extends THREE.Vector2 {
       [this.x, this.y] = [x, y]
     } else if (paperX !== undefined && paperY !== undefined) {
       [this.paperX, this.paperY] = [paperX, paperY]
+    } else {
+      [this.angleX, this.angleY] = [0, 0]
     }
     this.hidden = hidden
   }

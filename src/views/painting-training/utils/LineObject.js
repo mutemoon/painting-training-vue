@@ -1,4 +1,4 @@
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 import ThreeObject from "./ThreeObject"
 
 export default class LineObject extends ThreeObject {

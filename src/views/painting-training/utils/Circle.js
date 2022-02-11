@@ -1,4 +1,4 @@
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 import CircleObject from "./CircleObject";
 import store from "@/store";
 

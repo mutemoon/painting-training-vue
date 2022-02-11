@@ -1,7 +1,7 @@
 import store from "@/store";
 import Line from "./Line"
 import Point from "./Point"
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 
 export default class Plane {
   _vpA;

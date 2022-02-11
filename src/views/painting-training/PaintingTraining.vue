@@ -97,7 +97,7 @@ import MainView from "../../components/MainView/MainView.vue";
 import store from "@/store";
 import { mapActions } from "vuex";
 
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 
 export default {
   components: { Navigation, NavigationItem, NavigationSecondItem, MainView },
@@ -198,7 +198,11 @@ export default {
             {
               title: "明度训练",
               children: [
-                { title: "线线平行", icon: "mdi-account-multiple-outline" },
+                {
+                  title: "一般明度控制",
+                  icon: "mdi-account-multiple-outline",
+                  to: "lightness-controll",
+                },
               ],
             },
           ],

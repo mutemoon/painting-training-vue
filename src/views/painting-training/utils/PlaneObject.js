@@ -1,6 +1,6 @@
 import store from "@/store";
 import ThreeObject from "./ThreeObject"
-const THREE = require("three");
+import * as THREE from "@/assets/libs/three";
 
 export default class PlaneObject extends ThreeObject {
   _path;
